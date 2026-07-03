@@ -216,6 +216,36 @@ export async function addComment(
   return data as Comment
 }
 
+export async function deleteEntry(entryId: string): Promise<void> {
+  if (useMock) {
+    await delay(150)
+    const idx = mockState.entries.findIndex((e) => e.id === entryId)
+    if (idx >= 0) mockState.entries.splice(idx, 1)
+    return
+  }
+  // 사진 파일을 먼저 정리한 뒤 row 삭제 (diary_photos/comments/likes는 FK cascade)
+  const { data: photos } = await supabase
+    .from('diary_photos')
+    .select('storage_path')
+    .eq('entry_id', entryId)
+  if (photos && photos.length > 0) {
+    await supabase.storage.from('photos').remove(photos.map((p) => p.storage_path))
+  }
+  const { error } = await supabase.from('diary_entries').delete().eq('id', entryId)
+  if (error) throw error
+}
+
+export async function deleteComment(commentId: string, entryId: string): Promise<void> {
+  if (useMock) {
+    await delay(80)
+    const entry = mockState.entries.find((e) => e.id === entryId)
+    if (entry) entry.comments = entry.comments.filter((c) => c.id !== commentId)
+    return
+  }
+  const { error } = await supabase.from('comments').delete().eq('id', commentId)
+  if (error) throw error
+}
+
 export async function updateLastSeen(userId: string, at: string): Promise<void> {
   if (useMock) {
     const profile = mockState.profiles.find((p) => p.id === userId)

@@ -1,13 +1,22 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { format } from 'date-fns'
-import { ChevronLeft, Heart } from 'lucide-react'
+import { ChevronLeft, Heart, Trash2, X } from 'lucide-react'
 import { useAuth } from '@/features/auth/AuthProvider'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 import { useEntry, useProfiles } from './useDiaryQueries'
-import { useAddComment, useToggleLike } from './useDiaryMutations'
+import { useAddComment, useDeleteComment, useDeleteEntry, useToggleLike } from './useDiaryMutations'
 import { EntryPhotos } from './EntryPhotos'
 
 export function EntryDetailPage() {
@@ -18,6 +27,8 @@ export function EntryDetailPage() {
   const { data: profiles } = useProfiles()
   const toggleLike = useToggleLike(userId ?? '')
   const addComment = useAddComment(userId ?? '')
+  const deleteComment = useDeleteComment()
+  const deleteEntry = useDeleteEntry()
   const [commentText, setCommentText] = useState('')
 
   if (isLoading || !entry) {
@@ -25,6 +36,7 @@ export function EntryDetailPage() {
   }
 
   const liked = entry.likedBy.includes(userId ?? '')
+  const isMyEntry = entry.author_id === userId
   const authorOf = (authorId: string) =>
     profiles?.find((p) => p.id === authorId)?.display_name ?? ''
 
@@ -32,6 +44,11 @@ export function EntryDetailPage() {
     if (!commentText.trim() || !id) return
     addComment.mutate({ entryId: id, content: commentText })
     setCommentText('')
+  }
+
+  function handleDeleteEntry() {
+    if (!id) return
+    deleteEntry.mutate(id, { onSuccess: () => navigate('/') })
   }
 
   return (
@@ -43,6 +60,35 @@ export function EntryDetailPage() {
         <span className="text-sm font-medium">
           {entry.authorName} · {format(new Date(entry.entry_date), 'M월 d일')}
         </span>
+        {isMyEntry && (
+          <Dialog>
+            <DialogTrigger asChild>
+              <button className="ml-auto text-muted-foreground" aria-label="일기 삭제">
+                <Trash2 className="size-5" />
+              </button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>일기를 삭제할까요?</DialogTitle>
+              </DialogHeader>
+              <p className="text-sm text-muted-foreground">
+                삭제하면 사진·댓글·좋아요도 함께 사라지며 되돌릴 수 없어요.
+              </p>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button variant="outline">취소</Button>
+                </DialogClose>
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteEntry}
+                  disabled={deleteEntry.isPending}
+                >
+                  삭제
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
       </header>
 
       <EntryPhotos photos={entry.photos} />
@@ -64,9 +110,21 @@ export function EntryDetailPage() {
 
         <div className="mt-6 space-y-3">
           {entry.comments.map((comment) => (
-            <div key={comment.id} className="text-sm">
-              <span className="font-medium text-foreground">{authorOf(comment.author_id)}</span>{' '}
-              <span className="text-foreground">{comment.content}</span>
+            <div key={comment.id} className="flex items-start gap-2 text-sm">
+              <div className="flex-1">
+                <span className="font-medium text-foreground">{authorOf(comment.author_id)}</span>{' '}
+                <span className="text-foreground">{comment.content}</span>
+              </div>
+              {comment.author_id === userId && id && (
+                <button
+                  type="button"
+                  aria-label="댓글 삭제"
+                  className="mt-0.5 text-muted-foreground"
+                  onClick={() => deleteComment.mutate({ commentId: comment.id, entryId: id })}
+                >
+                  <X className="size-4" />
+                </button>
+              )}
             </div>
           ))}
           {entry.comments.length === 0 && (
