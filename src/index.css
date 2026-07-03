@@ -1,0 +1,77 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* 따뜻한 가족 앨범 테마 — 크림 배경 + 살구/코랄 포인트 */
+:root {
+  --background: oklch(0.985 0.008 84);
+  --foreground: oklch(0.32 0.03 50);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.32 0.03 50);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.32 0.03 50);
+  --primary: oklch(0.68 0.14 40);
+  --primary-foreground: oklch(0.99 0.005 84);
+  --secondary: oklch(0.95 0.02 78);
+  --secondary-foreground: oklch(0.42 0.05 45);
+  --muted: oklch(0.955 0.012 80);
+  --muted-foreground: oklch(0.55 0.03 55);
+  --accent: oklch(0.93 0.035 65);
+  --accent-foreground: oklch(0.4 0.06 42);
+  --destructive: oklch(0.6 0.2 25);
+  --destructive-foreground: oklch(0.99 0.005 84);
+  --border: oklch(0.91 0.015 78);
+  --input: oklch(0.91 0.015 78);
+  --ring: oklch(0.68 0.14 40);
+  --radius: 0.75rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    height: 100%;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    min-height: 100dvh;
+    /* iOS 홈화면 PWA에서 당겨서 새로고침/바운스 억제 */
+    overscroll-behavior-y: none;
+  }
+}
+
+/* safe-area 유틸 (하단 탭·헤더에서 사용) */
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
