@@ -4,6 +4,8 @@ import { AppShell } from '@/components/AppShell'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { FeedPage } from '@/features/diary/FeedPage'
 import { CalendarPage } from '@/features/diary/CalendarPage'
+import { AlbumPage } from '@/features/diary/AlbumPage'
+import { SearchPage } from '@/features/diary/SearchPage'
 import { EntryEditorPage } from '@/features/diary/EntryEditorPage'
 import { EntryDetailPage } from '@/features/diary/EntryDetailPage'
 import { InvestPage } from '@/features/invest/InvestPage'
@@ -25,6 +27,8 @@ function App() {
         <Route element={<AppShell />}>
           <Route path="/" element={<FeedPage />} />
           <Route path="/calendar" element={<CalendarPage />} />
+          <Route path="/album" element={<AlbumPage />} />
+          <Route path="/search" element={<SearchPage />} />
           <Route path="/write" element={<EntryEditorPage />} />
           <Route path="/entry/:id" element={<EntryDetailPage />} />
           <Route path="/invest" element={<InvestPage />} />
