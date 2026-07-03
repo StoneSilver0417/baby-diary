@@ -8,6 +8,7 @@ import { AlbumPage } from '@/features/diary/AlbumPage'
 import { SearchPage } from '@/features/diary/SearchPage'
 import { EntryEditorPage } from '@/features/diary/EntryEditorPage'
 import { EntryDetailPage } from '@/features/diary/EntryDetailPage'
+import { GrowthPage } from '@/features/growth/GrowthPage'
 import { InvestPage } from '@/features/invest/InvestPage'
 import { SettingsPage } from '@/features/settings/SettingsPage'
 
@@ -31,6 +32,7 @@ function App() {
           <Route path="/search" element={<SearchPage />} />
           <Route path="/write" element={<EntryEditorPage />} />
           <Route path="/entry/:id" element={<EntryDetailPage />} />
+          <Route path="/growth" element={<GrowthPage />} />
           <Route path="/invest" element={<InvestPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Route>
