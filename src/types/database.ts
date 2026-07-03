@@ -56,3 +56,36 @@ export type InvestNote = {
   note_date: string
   content: string
 }
+
+export type GrowthRecord = {
+  id: string
+  child_id: string
+  record_date: string
+  height_cm: number | null
+  weight_kg: number | null
+  memo: string | null
+}
+
+export type Milestone = {
+  id: string
+  child_id: string
+  milestone_date: string
+  title: string
+  memo: string | null
+  created_at: string
+}
+
+export type Dividend = {
+  id: string
+  child_id: string
+  dividend_date: string
+  stock_name: string
+  amount: number
+  memo: string | null
+}
+
+export type StockPrice = {
+  stock_name: string
+  current_price: number
+  updated_at: string
+}

@@ -3,8 +3,12 @@ import type {
   Comment,
   DiaryEntry,
   DiaryPhoto,
+  Dividend,
+  GrowthRecord,
   InvestNote,
+  Milestone,
   Profile,
+  StockPrice,
   Trade,
 } from '@/types/database'
 
@@ -82,4 +86,73 @@ export const mockState = {
     },
   ] as Trade[],
   notes: [] as InvestNote[],
+  growthRecords: [
+    {
+      id: 'growth-1',
+      child_id: 'child-1',
+      record_date: iso(daysAgo(200)),
+      height_cm: 50.5,
+      weight_kg: 3.4,
+      memo: '출생',
+    },
+    {
+      id: 'growth-2',
+      child_id: 'child-1',
+      record_date: iso(daysAgo(140)),
+      height_cm: 57.2,
+      weight_kg: 5.1,
+      memo: '2개월 검진',
+    },
+    {
+      id: 'growth-3',
+      child_id: 'child-1',
+      record_date: iso(daysAgo(80)),
+      height_cm: 63.0,
+      weight_kg: 6.8,
+      memo: '4개월 검진',
+    },
+    {
+      id: 'growth-4',
+      child_id: 'child-1',
+      record_date: iso(daysAgo(20)),
+      height_cm: 67.5,
+      weight_kg: 7.9,
+      memo: null,
+    },
+  ] as GrowthRecord[],
+  milestones: [
+    {
+      id: 'milestone-1',
+      child_id: 'child-1',
+      milestone_date: iso(daysAgo(100)),
+      title: '첫 미소',
+      memo: '아침에 눈 마주치고 처음 웃었다',
+      created_at: daysAgo(100).toISOString(),
+    },
+    {
+      id: 'milestone-2',
+      child_id: 'child-1',
+      milestone_date: iso(daysAgo(1)),
+      title: '첫 뒤집기',
+      memo: null,
+      created_at: daysAgo(1).toISOString(),
+    },
+  ] as Milestone[],
+  dividends: [
+    {
+      id: 'dividend-1',
+      child_id: 'child-1',
+      dividend_date: iso(daysAgo(10)),
+      stock_name: '삼성전자',
+      amount: 3610,
+      memo: '분기 배당',
+    },
+  ] as Dividend[],
+  prices: [
+    {
+      stock_name: '삼성전자',
+      current_price: 75000,
+      updated_at: daysAgo(2).toISOString(),
+    },
+  ] as StockPrice[],
 }

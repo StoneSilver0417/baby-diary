@@ -18,5 +18,10 @@ export const queryKeys = {
   photoUrl: (path: string) => ['photoUrl', path] as const,
   invest: {
     timeline: ['invest', 'timeline'] as const,
+    prices: ['invest', 'prices'] as const,
+  },
+  growth: {
+    records: ['growth', 'records'] as const,
+    milestones: ['growth', 'milestones'] as const,
   },
 }
