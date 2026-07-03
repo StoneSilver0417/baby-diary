@@ -3,6 +3,7 @@ import { ProtectedRoute, RedirectIfAuthed } from '@/components/ProtectedRoute'
 import { AppShell } from '@/components/AppShell'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { FeedPage } from '@/features/diary/FeedPage'
+import { CalendarPage } from '@/features/diary/CalendarPage'
 import { EntryEditorPage } from '@/features/diary/EntryEditorPage'
 import { EntryDetailPage } from '@/features/diary/EntryDetailPage'
 import { InvestPage } from '@/features/invest/InvestPage'
@@ -23,6 +24,7 @@ function App() {
       <Route element={<ProtectedRoute />}>
         <Route element={<AppShell />}>
           <Route path="/" element={<FeedPage />} />
+          <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/write" element={<EntryEditorPage />} />
           <Route path="/entry/:id" element={<EntryDetailPage />} />
           <Route path="/invest" element={<InvestPage />} />

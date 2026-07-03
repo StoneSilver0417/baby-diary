@@ -1,13 +1,15 @@
 import { Link } from 'react-router'
-import { differenceInCalendarDays, differenceInCalendarMonths, format } from 'date-fns'
-import { Heart, MessageCircle, Plus } from 'lucide-react'
+import { format } from 'date-fns'
+import { Heart, MessageCircle, Plus, Search } from 'lucide-react'
 import { useAuth } from '@/features/auth/AuthProvider'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { childAge } from '@/lib/childAge'
 import { useChild, useFeed, useProfiles } from './useDiaryQueries'
 import { useNewBadge } from './useNewBadge'
 import { EntryPhotos } from './EntryPhotos'
+import { DiaryViewSegment } from './DiaryViewSegment'
 
 export function FeedPage() {
   const { userId } = useAuth()
@@ -17,18 +19,27 @@ export function FeedPage() {
   const myProfile = profiles?.find((p) => p.id === userId)
   const { isNew } = useNewBadge(myProfile, feed)
 
-  const days = child ? differenceInCalendarDays(new Date(), new Date(child.birth_date)) : null
-  const months = child ? differenceInCalendarMonths(new Date(), new Date(child.birth_date)) : null
+  const age = childAge(child?.birth_date)
 
   return (
     <div className="relative min-h-full">
       <header className="sticky top-0 z-10 border-b border-border bg-background/95 px-5 pt-safe pb-4 backdrop-blur">
-        <h1 className="pt-4 text-xl font-semibold text-foreground">{child?.name ?? ' '}</h1>
-        {days !== null && (
-          <p className="text-sm text-muted-foreground">
-            D+{days}일 · {months}개월
-          </p>
-        )}
+        <div className="flex items-start justify-between pt-4">
+          <div>
+            <h1 className="text-xl font-semibold text-foreground">{child?.name ?? ' '}</h1>
+            {age && (
+              <p className="text-sm text-muted-foreground">
+                D+{age.days}일 · {age.months}개월
+              </p>
+            )}
+          </div>
+          <Link to="/search" aria-label="일기 검색" className="mt-1 text-muted-foreground">
+            <Search className="size-5" />
+          </Link>
+        </div>
+        <div className="mt-3">
+          <DiaryViewSegment />
+        </div>
       </header>
 
       <div className="divide-y divide-border">
