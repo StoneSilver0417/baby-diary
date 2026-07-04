@@ -48,7 +48,11 @@ export function EntryDetailPage() {
 
   function handleDeleteEntry() {
     if (!id) return
-    deleteEntry.mutate(id, { onSuccess: () => navigate('/') })
+    // 먼저 피드로 이동해 이 페이지의 useEntry 구독을 끊은 뒤 삭제를 진행한다.
+    // 순서를 반대로 하면(삭제 완료 후 이동) 훅의 onSuccess가 캐시를 정리하는 시점에
+    // 이 페이지가 아직 마운트돼 있어 삭제된 엔트리를 재조회하다 404/406이 난다.
+    navigate('/', { replace: true })
+    deleteEntry.mutate(id)
   }
 
   return (

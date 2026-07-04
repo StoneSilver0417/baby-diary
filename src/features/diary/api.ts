@@ -32,7 +32,9 @@ export async function getFeed(): Promise<DiaryEntry[]> {
   }
   const { data, error } = await supabase
     .from('diary_entries')
-    .select('*, profiles(display_name), diary_photos(*), comments(*), likes(author_id)')
+    .select(
+      '*, profiles!diary_entries_author_id_fkey(display_name), diary_photos(*), comments(*), likes(author_id)',
+    )
     .order('entry_date', { ascending: false })
   if (error) throw error
   return (data ?? []).map(mapRawEntry)
@@ -45,7 +47,9 @@ export async function getEntry(id: string): Promise<DiaryEntry | undefined> {
   }
   const { data, error } = await supabase
     .from('diary_entries')
-    .select('*, profiles(display_name), diary_photos(*), comments(*), likes(author_id)')
+    .select(
+      '*, profiles!diary_entries_author_id_fkey(display_name), diary_photos(*), comments(*), likes(author_id)',
+    )
     .eq('id', id)
     .single()
   if (error) throw error
@@ -63,7 +67,9 @@ export async function getEntryByDate(
   }
   const { data, error } = await supabase
     .from('diary_entries')
-    .select('*, profiles(display_name), diary_photos(*), comments(*), likes(author_id)')
+    .select(
+      '*, profiles!diary_entries_author_id_fkey(display_name), diary_photos(*), comments(*), likes(author_id)',
+    )
     .eq('author_id', authorId)
     .eq('entry_date', date)
     .maybeSingle()

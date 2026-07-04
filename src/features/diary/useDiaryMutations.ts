@@ -19,8 +19,11 @@ export function useDeleteEntry() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: deleteEntry,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['diary'] })
+    onSuccess: (_data, entryId) => {
+      // 상세 쿼리는 invalidate(재조회) 대신 즉시 제거 — 삭제된 행을 다시 조회하면
+      // 404/406으로 실패하는 레이스가 생긴다 (탐색으로 언마운트되기 전에 재조회가 먼저 발생).
+      queryClient.removeQueries({ queryKey: queryKeys.entry(entryId) })
+      queryClient.invalidateQueries({ queryKey: queryKeys.feed })
       toast.success('일기를 삭제했어요.')
     },
     onError: () => toast.error('삭제에 실패했습니다. 다시 시도해 주세요.'),

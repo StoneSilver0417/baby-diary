@@ -24,16 +24,17 @@ npx cap add android && npx cap sync   # 안드로이드 (JDK 21 — samsung-heal
 ## 환경
 | 환경 | 값 | 용도 |
 | ---- | -- | ---- |
-| Supabase | 새 조직에 프로젝트 1개 (개발/운영 분리 없음) | couple-finance 조직은 무료 플랜 2개 한도 소진 상태 — 아직 프로젝트 미생성, 사용자 보류 상태 |
-| 계정 | 부부 2계정 수동 생성, 회원가입 비활성화 | couple-finance 방식 |
+| Supabase | 새 조직 `baby-diary`, 프로젝트 1개, Seoul 리전 (URL: `isouteawnehcyfufrhrw.supabase.co`) | couple-finance 조직은 무료 플랜 2개 한도 소진 — 별도 조직으로 새 무료 슬롯 확보. **실제 연결 완료(v0.4.0)**, `.env.local`에 URL/anon key 설정됨(gitignore 대상) |
+| 계정 | 부부 2계정 수동 생성, 회원가입 비활성화 | 실제 이메일/비밀번호는 보안상 이 저장소에 기록하지 않음 — 대시보드 Authentication에서 UID로 관리 |
 | Android JDK | `C:\java\jdk-21.0.11+10` (시스템 JAVA_HOME은 깨진 JDK11이므로 절대 사용 금지) | Capacitor/Gradle 빌드 시 samsung-health 프로젝트에서 검증됨 |
 | Android SDK | `C:\Users\PC\AppData\Local\Android\sdk` | `android/local.properties`의 `sdk.dir` |
 | Gradle | 8.14 | samsung-health에서 검증된 버전 |
 
-## Mock 모드 (Supabase 연결 전 UI 검증용)
-- `.env.local`의 `VITE_USE_MOCK=true`(기본값)면 `src/lib/mockDb.ts`의 인메모리 데이터로 동작. `src/lib/supabase.ts`/`useMock` 플래그를 각 feature의 `api.ts`가 분기 처리.
+## Mock 모드 (Supabase 연결 전 UI 검증용, 필요 시 `VITE_USE_MOCK=true`로 전환 가능)
+- `.env.local`의 `VITE_USE_MOCK=true`면 `src/lib/mockDb.ts`의 인메모리 데이터로 동작. `src/lib/supabase.ts`/`useMock` 플래그를 각 feature의 `api.ts`가 분기 처리. 현재는 실제 연결(`false`)이 기본값.
 - mock 로그인 계정: `appa@family.test`/`omma@family.test`, 비밀번호 둘 다 `test1234` (`src/lib/mockDb.ts`의 `MOCK_USERS`).
 - mock 데이터는 브라우저 전체 새로고침(모듈 재평가) 시 초기화됨 — 의도된 동작이며 버그 아님.
+- **실제 Supabase 검증 시에도 동일한 함정 있음**: `page.goto`(전체 리로드)는 mock 상태뿐 아니라 실제 세션에서도 그 시점까지의 브라우저 상태를 리셋하므로, 방금 만든 데이터를 확인하려면 앱 내 링크 클릭(client-side navigation)으로 이동할 것.
 
 ## 프로젝트 고유 규칙
 - **하드 제약**: 애플 개발자 계정 없음 → iOS 네이티브 빌드 불가. 아이폰은 반드시 PWA로 지원해야 한다.

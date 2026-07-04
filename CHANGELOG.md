@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-07-04 (v0.4.0)
+
+### 변경 사항
+- **실제 Supabase 프로젝트 연결** — 기존 계정에 새 조직(`baby-diary`, Seoul 리전)을 만들어 무료 프로젝트 생성(couple-finance 조직과 별개, 조직당 2개 한도가 새로 생김). `0001_initial_schema.sql` → `0002_growth_invest.sql` 적용, 이메일 회원가입 비활성화, 부부 2계정 생성, household 1개 + profiles 2개 + children 1개(도준, 2023-08-11) 시드, `.env.local`을 `VITE_USE_MOCK=false`로 전환.
+- **버그 수정 — PGRST201 임베드 모호성**: `src/features/diary/api.ts`의 `diary_entries` select에서 `profiles(display_name)` 임베드가 직접 FK(`diary_entries.author_id`)와 `likes` 테이블을 통한 다대다 경로 둘 다에 매칭돼 PostgREST가 300으로 거부하던 것을 `profiles!diary_entries_author_id_fkey(display_name)`로 명시해 해결.
+- **버그 수정 — 일기 삭제 후 406 레이스**: `EntryDetailPage.handleDeleteEntry`의 순서를 "삭제 완료 → navigate"에서 "**navigate 먼저 → 삭제**"로 변경. `useDeleteEntry`의 `onSuccess`가 상세 쿼리 캐시를 정리(`removeQueries`)하는 시점에 상세 페이지가 여전히 마운트돼 있으면 삭제된 행을 즉시 재조회해 406이 나는 레이스가 있었음.
+
+### 의사결정 배경
+- **PGRST201은 스키마 설계(household 개편에서 도입한 `likes` 테이블 구조)와 PostgREST의 자동 관계 추론이 충돌한 사례** — `likes`가 `diary_entries`와 `profiles` 양쪽에 FK를 가지므로 PostgREST가 이를 암묵적 다대다 조인 경로로도 인식함. 스키마를 바꾸는 대신(예: likes를 별도 뷰로 분리) 쿼리 쪽에서 FK를 명시하는 쪽이 변경 범위가 작고 이해하기 쉬워 이 방법을 택함.
+- **삭제 레이스는 mock 모드에서는 드러나지 않았던 문제** — mock의 `deleteEntry`는 동기적 배열 조작이라 재조회 자체가 발생할 여지가 없었음. 실제 Supabase(네트워크 지연 있는 비동기 재조회)로 전환하고서야 TanStack Query의 캐시 무효화 타이밍과 컴포넌트 언마운트 타이밍의 경쟁 조건이 드러남 — **mock 검증이 로직은 검증해도 타이밍 버그까지는 못 잡는다는 걸 보여주는 사례**. 다른 페이지에서도 "삭제 후 이동" 패턴이 있으면 동일 원칙(먼저 이동, 나중에 뮤테이션 정리) 적용 검토 필요.
+- **테스트는 임시 계정으로, 실제 부부 계정은 건드리지 않음**: 원격 환경이라 실제 비밀번호 공유가 어려운 상황 → 별도 household를 가진 일회용 테스트 계정을 만들어 검증 후 완전히 삭제(cascade). 실 데이터·비밀번호 노출 없이 전체 파이프라인(인증·조인 쿼리·사진 업로드·RLS·삭제) 검증 완료.
+
 ## 2026-07-04 (v0.3.0)
 
 ### 변경 사항
