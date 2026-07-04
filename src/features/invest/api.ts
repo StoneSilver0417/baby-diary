@@ -80,7 +80,11 @@ export async function getPrices(): Promise<StockPrice[]> {
   return data as StockPrice[]
 }
 
-export async function upsertPrice(stockName: string, currentPrice: number): Promise<void> {
+export async function upsertPrice(
+  householdId: string,
+  stockName: string,
+  currentPrice: number,
+): Promise<void> {
   if (useMock) {
     await delay(150)
     const existing = mockState.prices.find((p) => p.stock_name === stockName)
@@ -89,15 +93,25 @@ export async function upsertPrice(stockName: string, currentPrice: number): Prom
       existing.current_price = currentPrice
       existing.updated_at = now
     } else {
-      mockState.prices.push({ stock_name: stockName, current_price: currentPrice, updated_at: now })
+      mockState.prices.push({
+        household_id: householdId,
+        stock_name: stockName,
+        current_price: currentPrice,
+        updated_at: now,
+      })
     }
     return
   }
   const { error } = await supabase
     .from('stock_prices')
     .upsert(
-      { stock_name: stockName, current_price: currentPrice, updated_at: new Date().toISOString() },
-      { onConflict: 'stock_name' },
+      {
+        household_id: householdId,
+        stock_name: stockName,
+        current_price: currentPrice,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'household_id,stock_name' },
     )
   if (error) throw error
 }

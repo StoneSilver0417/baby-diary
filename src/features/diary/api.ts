@@ -73,6 +73,7 @@ export async function getEntryByDate(
 
 type SaveEntryInput = {
   entryId?: string
+  householdId: string
   authorId: string
   authorName: string
   date: string
@@ -104,6 +105,7 @@ export async function saveEntry(input: SaveEntryInput): Promise<string> {
     newPhotoObjs.forEach((p) => (p.entry_id = id))
     mockState.entries.push({
       id,
+      household_id: input.householdId,
       author_id: input.authorId,
       entry_date: input.date,
       content: input.content,
@@ -122,6 +124,7 @@ export async function saveEntry(input: SaveEntryInput): Promise<string> {
     .upsert(
       {
         id: input.entryId,
+        household_id: input.householdId,
         author_id: input.authorId,
         entry_date: input.date,
         content: input.content,
@@ -150,7 +153,8 @@ export async function saveEntry(input: SaveEntryInput): Promise<string> {
     const startOrder = input.keepPhotoIds.length
     for (let i = 0; i < input.newPhotos.length; i++) {
       const compressed = await compressImage(input.newPhotos[i])
-      const path = `${input.authorId}/${entryId}/${crypto.randomUUID()}.webp`
+      // 경로 첫 폴더 = household_id (storage RLS가 이 폴더로 격리)
+      const path = `${input.householdId}/${entryId}/${crypto.randomUUID()}.webp`
       const { error: uploadError } = await supabase.storage.from('photos').upload(path, compressed)
       if (uploadError) throw uploadError
       uploadedPaths.push(path)
@@ -272,6 +276,7 @@ export async function getSignedPhotoUrl(path: string): Promise<string> {
 function mapRawEntry(raw: any): DiaryEntry {
   return {
     id: raw.id,
+    household_id: raw.household_id,
     author_id: raw.author_id,
     entry_date: raw.entry_date,
     content: raw.content,

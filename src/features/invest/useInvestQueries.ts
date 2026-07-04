@@ -38,8 +38,15 @@ export function useAddDividend() {
 export function useUpsertPrice() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ stockName, price }: { stockName: string; price: number }) =>
-      upsertPrice(stockName, price),
+    mutationFn: ({
+      householdId,
+      stockName,
+      price,
+    }: {
+      householdId: string
+      stockName: string
+      price: number
+    }) => upsertPrice(householdId, stockName, price),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.invest.prices }),
   })
 }

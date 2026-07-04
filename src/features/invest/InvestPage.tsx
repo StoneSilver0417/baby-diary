@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useChild, useProfiles } from '@/features/diary/useDiaryQueries'
+import { useChild, useHouseholdId, useProfiles } from '@/features/diary/useDiaryQueries'
 import { cn } from '@/lib/utils'
 import { computeHoldings, enrichHoldings, type EnrichedHolding } from './holdings'
 import { computeYearlySummary } from './summary'
@@ -217,11 +217,12 @@ function PriceSheet({
   onClose: () => void
 }) {
   const upsertPrice = useUpsertPrice()
+  const householdId = useHouseholdId()
   const [value, setValue] = useState('')
 
   async function handleSubmit() {
-    if (!holding || !value) return
-    await upsertPrice.mutateAsync({ stockName: holding.stockName, price: Number(value) })
+    if (!holding || !value || !householdId) return
+    await upsertPrice.mutateAsync({ householdId, stockName: holding.stockName, price: Number(value) })
     setValue('')
     onClose()
   }

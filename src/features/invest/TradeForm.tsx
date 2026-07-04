@@ -5,10 +5,12 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import type { TradeSide } from '@/types/database'
+import { useHouseholdId } from '@/features/diary/useDiaryQueries'
 import { useAddTrade } from './useInvestQueries'
 
 export function TradeForm({ childId, onDone }: { childId: string; onDone: () => void }) {
   const addTrade = useAddTrade()
+  const householdId = useHouseholdId()
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'))
   const [stockName, setStockName] = useState('')
   const [side, setSide] = useState<TradeSide>('매수')
@@ -17,8 +19,9 @@ export function TradeForm({ childId, onDone }: { childId: string; onDone: () => 
   const [memo, setMemo] = useState('')
 
   async function handleSubmit() {
-    if (!stockName.trim() || !quantity || !unitPrice) return
+    if (!stockName.trim() || !quantity || !unitPrice || !householdId) return
     await addTrade.mutateAsync({
+      household_id: householdId,
       child_id: childId,
       trade_date: date,
       stock_name: stockName,

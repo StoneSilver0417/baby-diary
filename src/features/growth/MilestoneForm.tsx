@@ -6,12 +6,14 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
+import { useHouseholdId } from '@/features/diary/useDiaryQueries'
 import { useAddMilestone } from './useGrowthQueries'
 
 const PRESETS = ['첫 미소', '첫 뒤집기', '첫 이유식', '첫 옹알이', '첫 앉기', '첫 걸음마', '첫 이빨']
 
 export function MilestoneForm({ childId, onDone }: { childId: string; onDone: () => void }) {
   const addMilestone = useAddMilestone()
+  const householdId = useHouseholdId()
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'))
   const [title, setTitle] = useState('')
   const [memo, setMemo] = useState('')
@@ -21,7 +23,9 @@ export function MilestoneForm({ childId, onDone }: { childId: string; onDone: ()
       toast.error('마일스톤 제목을 입력해 주세요.')
       return
     }
+    if (!householdId) return
     await addMilestone.mutateAsync({
+      householdId,
       childId,
       milestoneDate: date,
       title: title.trim(),

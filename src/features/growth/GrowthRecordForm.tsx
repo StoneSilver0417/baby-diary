@@ -5,10 +5,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { useHouseholdId } from '@/features/diary/useDiaryQueries'
 import { useUpsertGrowthRecord } from './useGrowthQueries'
 
 export function GrowthRecordForm({ childId, onDone }: { childId: string; onDone: () => void }) {
   const upsert = useUpsertGrowthRecord()
+  const householdId = useHouseholdId()
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'))
   const [height, setHeight] = useState('')
   const [weight, setWeight] = useState('')
@@ -19,7 +21,9 @@ export function GrowthRecordForm({ childId, onDone }: { childId: string; onDone:
       toast.error('키 또는 몸무게 중 하나는 입력해 주세요.')
       return
     }
+    if (!householdId) return
     await upsert.mutateAsync({
+      householdId,
       childId,
       recordDate: date,
       heightCm: height ? Number(height) : null,

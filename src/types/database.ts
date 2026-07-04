@@ -1,11 +1,18 @@
+export type Household = {
+  id: string
+  name: string
+}
+
 export type Profile = {
   id: string
+  household_id: string
   display_name: string
   last_seen_diary_at: string | null
 }
 
 export type Child = {
   id: string
+  household_id: string
   name: string
   birth_date: string
 }
@@ -27,6 +34,7 @@ export type Comment = {
 
 export type DiaryEntry = {
   id: string
+  household_id: string
   author_id: string
   entry_date: string
   content: string
@@ -41,6 +49,7 @@ export type TradeSide = '매수' | '매도'
 
 export type Trade = {
   id: string
+  household_id: string
   child_id: string
   trade_date: string
   stock_name: string
@@ -52,6 +61,7 @@ export type Trade = {
 
 export type InvestNote = {
   id: string
+  household_id: string
   author_id: string
   note_date: string
   content: string
@@ -59,6 +69,7 @@ export type InvestNote = {
 
 export type GrowthRecord = {
   id: string
+  household_id: string
   child_id: string
   record_date: string
   height_cm: number | null
@@ -68,6 +79,7 @@ export type GrowthRecord = {
 
 export type Milestone = {
   id: string
+  household_id: string
   child_id: string
   milestone_date: string
   title: string
@@ -77,6 +89,7 @@ export type Milestone = {
 
 export type Dividend = {
   id: string
+  household_id: string
   child_id: string
   dividend_date: string
   stock_name: string
@@ -85,6 +98,7 @@ export type Dividend = {
 }
 
 export type StockPrice = {
+  household_id: string
   stock_name: string
   current_price: number
   updated_at: string

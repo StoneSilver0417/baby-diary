@@ -15,6 +15,7 @@ export async function getGrowthRecords(): Promise<GrowthRecord[]> {
 }
 
 type GrowthInput = {
+  householdId: string
   childId: string
   recordDate: string
   heightCm: number | null
@@ -35,6 +36,7 @@ export async function upsertGrowthRecord(input: GrowthInput): Promise<void> {
     } else {
       mockState.growthRecords.push({
         id: crypto.randomUUID(),
+        household_id: input.householdId,
         child_id: input.childId,
         record_date: input.recordDate,
         height_cm: input.heightCm,
@@ -46,6 +48,7 @@ export async function upsertGrowthRecord(input: GrowthInput): Promise<void> {
   }
   const { error } = await supabase.from('growth_records').upsert(
     {
+      household_id: input.householdId,
       child_id: input.childId,
       record_date: input.recordDate,
       height_cm: input.heightCm,
@@ -84,6 +87,7 @@ export async function getMilestones(): Promise<Milestone[]> {
 }
 
 type MilestoneInput = {
+  householdId: string
   childId: string
   milestoneDate: string
   title: string
@@ -95,6 +99,7 @@ export async function addMilestone(input: MilestoneInput): Promise<void> {
     await delay(200)
     mockState.milestones.push({
       id: crypto.randomUUID(),
+      household_id: input.householdId,
       child_id: input.childId,
       milestone_date: input.milestoneDate,
       title: input.title,
@@ -104,6 +109,7 @@ export async function addMilestone(input: MilestoneInput): Promise<void> {
     return
   }
   const { error } = await supabase.from('milestones').insert({
+    household_id: input.householdId,
     child_id: input.childId,
     milestone_date: input.milestoneDate,
     title: input.title,

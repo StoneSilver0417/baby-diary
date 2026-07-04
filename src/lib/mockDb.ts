@@ -17,6 +17,9 @@ import type {
  * VITE_USE_MOCK=true일 때 lib/supabase.ts 대신 이 모듈이 데이터 계층 역할을 한다.
  */
 
+/** mock은 단일 가족만 시뮬레이션한다 (멀티테넌트 격리는 실제 Supabase의 RLS가 담당) */
+export const HOUSEHOLD_ID = 'household-1'
+
 export const MOCK_USERS = [
   { id: 'user-a', email: 'appa@family.test', password: 'test1234', display_name: '아빠' },
   { id: 'user-b', email: 'omma@family.test', password: 'test1234', display_name: '엄마' },
@@ -33,17 +36,20 @@ const daysAgo = (n: number) => {
 export const mockState = {
   profiles: MOCK_USERS.map<Profile>((u) => ({
     id: u.id,
+    household_id: HOUSEHOLD_ID,
     display_name: u.display_name,
     last_seen_diary_at: null,
   })),
   child: {
     id: 'child-1',
+    household_id: HOUSEHOLD_ID,
     name: '하은',
     birth_date: iso(daysAgo(200)),
   } as Child,
   entries: [
     {
       id: 'entry-1',
+      household_id: HOUSEHOLD_ID,
       author_id: 'user-b',
       entry_date: iso(daysAgo(1)),
       content: '오늘 처음으로 뒤집기에 성공했어요! 너무 신기해서 몇 번이나 다시 보여줬어요.',
@@ -55,6 +61,7 @@ export const mockState = {
     },
     {
       id: 'entry-2',
+      household_id: HOUSEHOLD_ID,
       author_id: 'user-a',
       entry_date: iso(daysAgo(3)),
       content: '이유식을 처음 먹어봤는데 표정이 너무 웃겼다.',
@@ -76,6 +83,7 @@ export const mockState = {
   trades: [
     {
       id: 'trade-1',
+      household_id: HOUSEHOLD_ID,
       child_id: 'child-1',
       trade_date: iso(daysAgo(30)),
       stock_name: '삼성전자',
@@ -89,6 +97,7 @@ export const mockState = {
   growthRecords: [
     {
       id: 'growth-1',
+      household_id: HOUSEHOLD_ID,
       child_id: 'child-1',
       record_date: iso(daysAgo(200)),
       height_cm: 50.5,
@@ -97,6 +106,7 @@ export const mockState = {
     },
     {
       id: 'growth-2',
+      household_id: HOUSEHOLD_ID,
       child_id: 'child-1',
       record_date: iso(daysAgo(140)),
       height_cm: 57.2,
@@ -105,6 +115,7 @@ export const mockState = {
     },
     {
       id: 'growth-3',
+      household_id: HOUSEHOLD_ID,
       child_id: 'child-1',
       record_date: iso(daysAgo(80)),
       height_cm: 63.0,
@@ -113,6 +124,7 @@ export const mockState = {
     },
     {
       id: 'growth-4',
+      household_id: HOUSEHOLD_ID,
       child_id: 'child-1',
       record_date: iso(daysAgo(20)),
       height_cm: 67.5,
@@ -123,6 +135,7 @@ export const mockState = {
   milestones: [
     {
       id: 'milestone-1',
+      household_id: HOUSEHOLD_ID,
       child_id: 'child-1',
       milestone_date: iso(daysAgo(100)),
       title: '첫 미소',
@@ -131,6 +144,7 @@ export const mockState = {
     },
     {
       id: 'milestone-2',
+      household_id: HOUSEHOLD_ID,
       child_id: 'child-1',
       milestone_date: iso(daysAgo(1)),
       title: '첫 뒤집기',
@@ -141,6 +155,7 @@ export const mockState = {
   dividends: [
     {
       id: 'dividend-1',
+      household_id: HOUSEHOLD_ID,
       child_id: 'child-1',
       dividend_date: iso(daysAgo(10)),
       stock_name: '삼성전자',
@@ -150,6 +165,7 @@ export const mockState = {
   ] as Dividend[],
   prices: [
     {
+      household_id: HOUSEHOLD_ID,
       stock_name: '삼성전자',
       current_price: 75000,
       updated_at: daysAgo(2).toISOString(),

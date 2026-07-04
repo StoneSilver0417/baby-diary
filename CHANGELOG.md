@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-07-04 (v0.3.0)
+
+### 변경 사항
+- **household(가족) 멀티테넌트 모델로 스키마 개편** — 지인도 각자 자기 자녀 일기를 기록하되 가족 간 데이터가 완전히 격리되도록 설계. Supabase 미적용 상태(운영 데이터 0)라 지금이 개편 최적기.
+  - `households` 테이블 신설 + `profiles.household_id`(1인 1가족) + children/diary_entries/trades/invest_notes/growth_records/milestones/dividends에 `household_id`.
+  - RLS를 "authenticated 전체 공유"에서 `household_id = my_household_id()`(SECURITY DEFINER 헬퍼 함수)로 전면 교체. diary_photos/comments/likes는 부모 엔트리의 household로 판정.
+  - `stock_prices` PK를 `stock_name` → `(household_id, stock_name)` 복합키로(가족마다 같은 종목 현재가를 독립 보관).
+  - Storage 경로를 `{author_id}/...` → `{household_id}/{entry_id}/...`로 바꾸고 정책도 첫 폴더=household로 격리.
+  - 앱: `useHouseholdId()` 훅으로 현재 사용자의 household를 조회해 모든 쓰기 경로(일기 저장·거래·메모·배당·현재가·성장기록·마일스톤)에 주입. mock은 단일 가족(`HOUSEHOLD_ID`)으로 시뮬레이션(RLS가 없으므로 격리는 실제 Supabase에서만 발효).
+- mock 전 쓰기 경로를 Playwright로 재검증: 일기 저장(사진 포함)·현재가 90,000 입력 → +28.6% 재계산 정확, 콘솔 에러 0건.
+
+### 의사결정 배경
+- **왜 지금**: 스키마 변경은 운영 데이터가 쌓인 뒤엔 마이그레이션 비용이 크지만, 아직 Supabase 미연결이라 파일 수정만으로 끝남. 지인 확장이 "언젠가"라도 스키마에는 미리 넣는 게 정답.
+- **1인 1가족(household_id 컬럼) vs 다대다(join 테이블)**: "각 가족이 독립 공간" 요구에는 단일 컬럼이 충분하고 RLS가 단순해짐. 한 사람이 여러 가족에 속할 일이 생기면 그때 join으로 확장.
+- **배당·현재가 격리**: 현재가가 종목명 전역 PK였으면 A가족이 삼성전자 현재가를 바꿀 때 B가족에도 반영되는 누수가 있었음 → 복합키로 차단.
+- **온보딩은 스키마와 분리**: 지금은 부부 1가족만 수동 시드하면 되고, 가입/초대 UI는 지인이 실제 생길 때 추가(스키마·RLS는 이미 준비됨).
+
 ## 2026-07-04 (v0.2.0)
 
 ### 변경 사항

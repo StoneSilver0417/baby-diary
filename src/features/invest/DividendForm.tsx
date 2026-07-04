@@ -4,18 +4,21 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { useHouseholdId } from '@/features/diary/useDiaryQueries'
 import { useAddDividend } from './useInvestQueries'
 
 export function DividendForm({ childId, onDone }: { childId: string; onDone: () => void }) {
   const addDividend = useAddDividend()
+  const householdId = useHouseholdId()
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'))
   const [stockName, setStockName] = useState('')
   const [amount, setAmount] = useState('')
   const [memo, setMemo] = useState('')
 
   async function handleSubmit() {
-    if (!stockName.trim() || !amount) return
+    if (!stockName.trim() || !amount || !householdId) return
     await addDividend.mutateAsync({
+      household_id: householdId,
       child_id: childId,
       dividend_date: date,
       stock_name: stockName,

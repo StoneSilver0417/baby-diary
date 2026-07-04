@@ -1,5 +1,6 @@
 import { useQuery, useQueries } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/queryClient'
+import { useAuth } from '@/features/auth/AuthProvider'
 import { getChild, getEntry, getFeed, getProfiles, getSignedPhotoUrl } from './api'
 
 export function useChild() {
@@ -8,6 +9,13 @@ export function useChild() {
 
 export function useProfiles() {
   return useQuery({ queryKey: ['profiles'], queryFn: getProfiles })
+}
+
+/** 현재 로그인 사용자가 속한 household id (쓰기 시 데이터 격리에 필요) */
+export function useHouseholdId(): string | undefined {
+  const { userId } = useAuth()
+  const { data: profiles } = useProfiles()
+  return profiles?.find((p) => p.id === userId)?.household_id
 }
 
 export function useFeed() {
