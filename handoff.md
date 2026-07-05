@@ -4,8 +4,8 @@
 
 - **버전**: v0.9.0 (보안·과금 방어 점검 + 전체 리팩토링)
 - **빌드 상태**: `npx tsc --noEmit` 통과, `npm run build` 통과 (라우트 lazy loading으로 메인 번들 665KB→343KB, gzip 107KB)
-- **배포 상태**: **웹 배포 완료** — https://baby-diary-tau.vercel.app (Vercel 프로젝트 `waterdrop11s-projects/baby-diary`). 안드로이드는 디버그 APK 로컬 생성까지(Play Store 미배포).
-- **실행 방법/URL**: 웹은 위 URL로 바로 접속(아이폰은 Safari로 열어 공유 버튼 → "홈 화면에 추가"로 PWA 설치). 로컬 개발은 `npm run dev` → `.env.local`에 실제 Supabase URL/anon key 설정됨(`VITE_USE_MOCK=false`). 로그인 계정은 부부가 대시보드에서 만든 실제 이메일(별도 기록 필요 — 이 저장소엔 없음).
+- **배포 상태**: **웹 배포 완료** — https://baby-diary-tau.vercel.app (Vercel 프로젝트 `waterdrop11s-projects/baby-diary`). 안드로이드는 디버그 APK를 **GitHub Release**로 배포(Play Store 미배포).
+- **실행 방법/URL**: 웹은 위 URL로 바로 접속(아이폰은 Safari로 열어 공유 버튼 → "홈 화면에 추가"로 PWA 설치). 안드로이드는 https://github.com/StoneSilver0417/baby-diary/releases/tag/android-latest 에서 GitHub 로그인 상태로 `app-debug.apk` 다운로드 후 설치(덮어 설치). 로컬 개발은 `npm run dev` → `.env.local`에 실제 Supabase URL/anon key 설정됨(`VITE_USE_MOCK=false`). 로그인 계정은 부부가 대시보드에서 만든 실제 이메일(별도 기록 필요 — 이 저장소엔 없음).
 
 ## 최근 작업
 

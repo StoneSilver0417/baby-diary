@@ -11,7 +11,7 @@
 - 프레임워크: React 19 + TypeScript + Vite (정적 SPA — Next.js SSR은 Capacitor로 못 감싸므로 금지)
 - UI: Tailwind CSS + shadcn/ui, 상태/캐시: TanStack Query (옵티미스틱 업데이트 필수)
 - DB/백엔드: Supabase (Auth·Postgres·Storage·RLS) — 서버 코드 없음. 마이그레이션은 `supabase/` 폴더에 SQL로 관리
-- 배포: 안드로이드 = Capacitor 8 APK(appId `com.wooseokshim.babydiary`, `capacitor.config.ts`) / 아이폰 = PWA(홈화면 추가, `vite-plugin-pwa`) / 웹 = Vercel
+- 배포: 안드로이드 = Capacitor 8 디버그 APK를 GitHub Release(`android-latest` 태그, 파일만 계속 교체)로 배포 — https://github.com/StoneSilver0417/baby-diary/releases/tag/android-latest (appId `com.wooseokshim.babydiary`, `capacitor.config.ts`) / 아이폰 = PWA(홈화면 추가, `vite-plugin-pwa`) / 웹 = Vercel
 
 ## 주요 명령어
 ```bash
@@ -21,6 +21,7 @@ npx tsc --noEmit # 타입 체크
 npm run icons    # src/assets/app-icon.svg → public/icons/*·assets/(icon·splash) 재생성 (sharp)
 npx cap sync android   # 웹 빌드를 안드로이드 프로젝트로 동기화
 cd android && ./gradlew.bat assembleDebug   # 디버그 APK 빌드 (JDK 21 — android/gradle.properties에 org.gradle.java.home 고정됨)
+gh release upload android-latest android/app/build/outputs/apk/debug/app-debug.apk --clobber   # 배포용 APK 갱신
 ```
 
 ## 환경
