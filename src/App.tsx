@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router'
 import { ProtectedRoute, RedirectIfAuthed } from '@/components/ProtectedRoute'
 import { AppShell } from '@/components/AppShell'
 import { SplashScreen } from '@/components/SplashScreen'
+import { useAndroidBackButton } from '@/lib/useAndroidBackButton'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { FeedPage } from '@/features/diary/FeedPage'
 import { EntryEditorPage } from '@/features/diary/EntryEditorPage'
@@ -29,6 +30,8 @@ const SettingsPage = lazy(() =>
 )
 
 function App() {
+  useAndroidBackButton()
+
   return (
     <Suspense fallback={<SplashScreen />}>
       <Routes>

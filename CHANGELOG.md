@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-07-05 (v0.9.1)
+
+### 변경 사항 — 모바일 UX 버그 3건 수정
+실기기(안드로이드 APK) 사용 중 사용자가 발견한 3가지 문제를 수정.
+
+1. **마일스톤 등 하단 시트의 저장 버튼이 기기 하단 버튼/제스처 바와 겹침**: `src/components/ui/sheet.tsx`의 `SheetContent` `side="bottom"` 변형에 `pb-safe`가 빠져 있었다. Radix Dialog는 `document.body`에 포털돼 `AppShell`의 안전영역 처리(`pb-nav`)를 상속받지 못하므로, 시트 자체에 `env(safe-area-inset-bottom)` 패딩을 직접 넣어야 했다. 한 곳만 고치면 투자·성장 탭의 모든 폼(거래·배당·메모·성장기록·마일스톤)에 일괄 적용됨.
+2. **일기 상세 화면에서 안드로이드 뒤로가기를 누르면 인앱 이동 대신 앱이 최소화됨**: `@capacitor/app` 플러그인이 아예 설치돼 있지 않아 `backButton` 이벤트에 대한 리스너가 전혀 없었고, 리스너가 없으면 Android 기본 동작(액티비티 종료 = 앱 최소화)만 발생한다. `@capacitor/app` 설치 후 `src/lib/useAndroidBackButton.ts` 신설 — 네이티브 플랫폼에서만 `backButton`을 구독해 `canGoBack`이면 `window.history.back()`(react-router가 popstate로 자동 처리), 아니면(=피드/메인) `App.exitApp()`.
+3. **사진 넘기기가 탭 전용이라 인스타그램처럼 스와이프가 안 됨**: `src/components/PhotoCarousel.tsx`를 좌우 탭존 방식에서 포인터 이벤트 기반 드래그로 재작성. 드래그 중 실시간으로 `translateX`가 손가락을 따라가고, 50px 임계값을 넘으면 다음/이전 사진으로 스냅(300ms 트랜지션), 못 넘으면 원위치로 복귀.
+
+### 의사결정 배경
+- **안드로이드 뒤로가기는 Playwright로 재현 불가**: 하드웨어/제스처 백버튼은 Capacitor 네이티브 브릿지 이벤트라 웹 브라우저 기반 자동화로는 검증할 수 없다 — 코드 로직(리스너 등록·canGoBack 분기)은 확인했지만 실제 동작은 사용자의 실기기 재확인이 필요함을 handoff.md에 명시.
+- **스와이프 임계값을 50px 고정값으로**: 화면 너비 비율(%)로 하면 큰 화면에서 과도하게 많이 밀어야 하고 작은 화면에서 너무 예민해진다 — Instagram 등 참고 앱들도 절대 픽셀 임계값을 쓰는 편이라 동일하게 채택.
+
 ## 2026-07-05 (v0.9.0)
 
 ### 변경 사항 — 보안·과금 방어 점검 + 전체 리팩토링

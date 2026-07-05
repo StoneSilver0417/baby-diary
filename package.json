@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@capacitor/android": "^8.4.1",
+    "@capacitor/app": "^8.1.0",
     "@capacitor/core": "^8.4.1",
     "@fontsource/hi-melody": "^5.2.8",
     "@supabase/supabase-js": "^2.110.0",

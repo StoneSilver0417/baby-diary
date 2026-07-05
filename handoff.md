@@ -2,13 +2,18 @@
 
 ## 현재 상태
 
-- **버전**: v0.9.0 (보안·과금 방어 점검 + 전체 리팩토링)
+- **버전**: v0.9.1 (모바일 UX 버그 3건 수정: 시트 여백·안드로이드 뒤로가기·사진 스와이프)
 - **빌드 상태**: `npx tsc --noEmit` 통과, `npm run build` 통과 (라우트 lazy loading으로 메인 번들 665KB→343KB, gzip 107KB)
 - **배포 상태**: **웹 배포 완료** — https://baby-diary-tau.vercel.app (Vercel 프로젝트 `waterdrop11s-projects/baby-diary`). 안드로이드는 디버그 APK를 **GitHub Release**로 배포(Play Store 미배포).
 - **실행 방법/URL**: 웹은 위 URL로 바로 접속(아이폰은 Safari로 열어 공유 버튼 → "홈 화면에 추가"로 PWA 설치). 안드로이드는 https://github.com/StoneSilver0417/baby-diary/releases/tag/android-latest 에서 GitHub 로그인 상태로 `app-debug.apk` 다운로드 후 설치(덮어 설치). 로컬 개발은 `npm run dev` → `.env.local`에 실제 Supabase URL/anon key 설정됨(`VITE_USE_MOCK=false`). 로그인 계정은 부부가 대시보드에서 만든 실제 이메일(별도 기록 필요 — 이 저장소엔 없음).
 
 ## 최근 작업
 
+- **모바일 UX 버그 3건 수정 (v0.9.1)**: 사용자가 실기기에서 지적.
+  1. **마일스톤 등 하단 시트 저장 버튼이 기기 하단 버튼과 겹침**: `SheetContent`의 `side="bottom"` 변형에 `pb-safe` 누락 — Radix Dialog가 최상위 포털이라 AppShell의 안전영역 처리를 안 받음. `src/components/ui/sheet.tsx`에 `pb-safe` 추가로 모든 하단 시트(투자·성장 폼 전부)에 일괄 적용.
+  2. **일기 상세에서 안드로이드 뒤로가기를 누르면 인앱 이동 대신 앱이 최소화됨**: `@capacitor/app` 플러그인이 아예 설치돼 있지 않아, 뒤로가기 버튼에 대한 리스너가 없어 기본 동작(앱 종료)만 발생하던 문제. `@capacitor/app` 설치 + `src/lib/useAndroidBackButton.ts` 신규(네이티브 플랫폼에서만 `backButton` 이벤트 구독, `canGoBack`이면 `history.back()`, 아니면(=메인) `App.exitApp()`) → `App.tsx`에 마운트. **실기기 재검증 필요**(Playwright로는 하드웨어 뒤로가기 재현 불가).
+  3. **사진 넘기기가 탭 전용이라 인스타처럼 스와이프가 안 됨**: `src/components/PhotoCarousel.tsx`를 포인터 이벤트 기반 드래그로 재작성 — 드래그 중 실시간 translateX 추종, 50px 임계값 넘으면 다음/이전 장으로 스냅, 놓으면 300ms 트랜지션. Playwright로 드래그 시뮬레이션해 인덱스 전환·점 표시기 갱신 확인.
+  - 웹 스모크(mock)로 1·3번 확인(콘솔 에러 0), 안드로이드 APK 재빌드 후 GitHub Release(`android-latest`) 갱신 완료 — 2번은 실기기에서 최종 확인 필요.
 - **보안·과금 방어 점검 + 전체 리팩토링 (v0.9.0)**: 코드·마이그레이션·인프라 전수 점검. 핵심 결론: **무료 플랜(Supabase 무료 조직 + Vercel Hobby)은 결제수단 미등록 하드캡이라 비정상 요청이 와도 과금은 구조적으로 불가능** — 리스크는 한도 잠식으로 인한 서비스 정지이며, 그 표면을 줄이는 조치를 반영.
   - **⚠️ 미적용: `supabase/migrations/0003_hardening.sql`을 SQL Editor에서 실행해야 함** — 버킷 3MB·이미지 MIME 제한, 텍스트 길이 CHECK, profiles.household_id 변경 금지 트리거(멀티테넌트 격리 우회 구멍 차단 — 이번 점검 최대 발견), children 5명 제한.
   - vercel.json 보안 헤더 5종 + noindex, 서명 URL TTL 7일→24h.
@@ -40,7 +45,7 @@
 
 0. [ ] **`supabase/migrations/0003_hardening.sql`을 SQL Editor에서 실행** (보안 하드닝 — 실행 전까지 버킷 크기 제한·격리 우회 방어 미적용 상태)
 1. [ ] 아이폰 Safari에서 https://baby-diary-tau.vercel.app 접속 → 홈 화면에 추가 → PWA 설치·로그인·사용 전체 플로우 실기기 검증
-2. [ ] 안드로이드 실기기에 새 APK(`android/app/build/outputs/apk/debug/app-debug.apk`) 재설치 → FAB 잘림 해결 확인 + 전체 플로우 검증
+2. [ ] 안드로이드 실기기에 GitHub Release(`android-latest`) 최신 APK 설치 → 마일스톤 시트 여백·뒤로가기 인앱 이동·사진 스와이프 3건 모두 실기기 검증
 3. [ ] (지인 확장 시) 가입 → 가족 생성/초대코드로 배우자 합류 온보딩 화면. 스키마·RLS는 이미 멀티테넌트라 앱 온보딩 UI만 추가하면 됨. 무료 플랜은 2~3가족까지 여유, 5가족 이상 활발하면 스토리지 1GB·전송 5GB 압박 → Pro($25/월) 또는 이미지 압축 강화.
 4. [ ] (저장소 압박 시) 사진만 Cloudflare R2로 분리 — 설계는 `docs/r2-photo-plan.md`에 보존, 아직 미실행.
 5. [ ] (정식 배포 시) Android release 서명 키스토어 생성 + release 빌드 서명 설정.
