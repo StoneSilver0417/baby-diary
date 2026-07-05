@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-07-05 (v0.7.0)
+
+### 변경 사항
+- **Capacitor 8 Android 프로젝트 추가 + 디버그 APK 빌드**: handoff TODO의 다음 항목 실행. `@capacitor/core`·`@capacitor/android`·`@capacitor/cli`·`@capacitor/assets` 설치, `capacitor.config.ts` 작성(appId `com.wooseokshim.babydiary`), `npx cap add android`로 `android/` 프로젝트 생성.
+- **사진 선택에 별도 네이티브 플러그인을 추가하지 않음**: Capacitor Android WebView가 `<input type="file" accept="image/*" multiple>`을 그대로 시스템 Photo Picker(Android 13+, 권한 불필요)로 연결한다는 점을 근거로 `@capacitor/camera`를 도입하지 않기로 결정. `src/lib/photoPicker.ts`의 "Capacitor 도입 시 분기 추가" 주석을 "네이티브 분기 불필요 확인됨"으로 갱신.
+- **앱 아이콘/스플래시를 그림일기 톤 그대로 확장**: `scripts/generate-icons.mjs`에 Capacitor용 `assets/icon.png`(1024)·`assets/splash.png`(2732, 아이콘과 동일한 코랄 배경 위에 축소 합성)를 추가하고 `npx capacitor-assets generate --android`로 전 밀도 mipmap·스플래시를 자동 생성. 원형 크롭 등으로 실제 PNG를 육안 검증.
+- **JDK 21을 프로젝트 로컬 설정으로 강제**: `android/gradle.properties`에 `org.gradle.java.home=C:\java\jdk-21.0.11+10` 추가 — 시스템 `JAVA_HOME`(깨진 JDK11)에 전혀 의존하지 않게 함. `android/local.properties`에 SDK 경로 작성.
+- 빌드 검증: `npm run build` → `npx cap sync android` → `cd android && ./gradlew.bat assembleDebug`가 첫 시도에 성공(2분 31초), `app-debug.apk`(8.2MB) 생성 확인. `npx cap doctor` 정상. `.gitignore`(Capacitor 기본 템플릿)가 `local.properties`·`build/`·`.gradle/`을 정확히 제외하는지 `git add -A -n`으로 확인.
+
+### 의사결정 배경
+- **Capacitor 7이 아닌 8을 그대로 사용**: AGENTS.md에 "Capacitor 7"이라 적혀 있었지만, 이는 과거 시점에 작성된 계획값일 뿐 실제로 v7에 의존하는 코드나 검증된 호환성 이슈가 없었다. `npm install` 시점의 최신 안정 메이저(8.4.1)를 그대로 쓰는 것이 특정 버전을 인위적으로 고정하는 것보다 유지보수에 유리하다고 판단 — AGENTS.md 기재값도 실제 설치 버전(8)으로 갱신.
+- **`@capacitor/camera` 미도입**: v1 범위는 "갤러리에서 사진 선택"이며 "카메라로 직접 촬영"은 요구사항에 없다. Android WebView의 파일 입력이 이미 시스템 포토피커를 열어주므로 별도 플러그인 없이 요구사항이 충족되고, 그만큼 `AndroidManifest.xml` 권한 선언·플러그인 코드가 늘어나지 않는다. 촬영 기능이 실제로 필요해지는 시점에 플러그인을 추가하는 편이 지금 미리 붙이는 것보다 낫다고 판단(YAGNI).
+- **samsung-health 프로젝트 참고 범위를 좁게 해석**: AGENTS.md가 "samsung-health 프로젝트의 빌드 설정 참고"라 적어뒀지만, 실제로 그 프로젝트는 Flutter 기반이라 Capacitor 관련 설정(플러그인, capacitor.config 등)은 전혀 참고할 수 없었고, JDK 21 경로·Android SDK 경로·Gradle 8.x 계열 버전이라는 "환경 사실"만 재사용 가능했다. Gradle 버전은 Capacitor 8 기본 템플릿이 이미 8.14.3을 지정하고 있어 그대로 두고 인위적으로 8.14로 다운그레이드하지 않았다(패치 버전 차이는 무의미).
+- **아이콘 소스를 단일 정사각 PNG로 통일(적응형 아이콘 전경/배경 레이어 분리 생략)**: `@capacitor/assets`는 전경/배경을 분리한 레이어를 주면 더 정교한 적응형 아이콘을 만들 수 있지만, 우리 아이콘은 이미 배경색이 전체를 채우는 단순한 정사각 디자인이라 단일 소스로도 원형 크롭 시 클리핑이 없음을 확인했다(웹 매니페스트 마스크러블 아이콘 설계 시 이미 80% 안전영역을 계산해뒀기 때문). 레이어 분리는 복잡도 대비 이득이 적어 생략.
+
 ## 2026-07-05 (v0.6.0)
 
 ### 변경 사항

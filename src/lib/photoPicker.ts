@@ -1,6 +1,7 @@
 /**
- * 웹 <input type=file>과 Capacitor 네이티브 픽커를 동일한 인터페이스로 통일.
- * Capacitor 도입(10단계) 시 Capacitor.isNativePlatform() 분기를 이 파일에 추가한다.
+ * Capacitor Android WebView는 <input type=file accept="image/*" multiple">을 만나면
+ * 시스템 Photo Picker(Android 13+, 권한 불필요)를 그대로 띄운다 — 네이티브 분기 불필요 확인됨.
+ * 카메라 직접 촬영이 필요해지면 그때 @capacitor/camera 플러그인 도입을 검토한다.
  */
 export async function pickPhotos(fileList: FileList): Promise<Blob[]> {
   return Array.from(fileList)

@@ -11,14 +11,16 @@
 - 프레임워크: React 19 + TypeScript + Vite (정적 SPA — Next.js SSR은 Capacitor로 못 감싸므로 금지)
 - UI: Tailwind CSS + shadcn/ui, 상태/캐시: TanStack Query (옵티미스틱 업데이트 필수)
 - DB/백엔드: Supabase (Auth·Postgres·Storage·RLS) — 서버 코드 없음. 마이그레이션은 `supabase/` 폴더에 SQL로 관리
-- 배포: 안드로이드 = Capacitor 7 APK / 아이폰 = PWA(홈화면 추가) / 웹 = Vercel
+- 배포: 안드로이드 = Capacitor 8 APK(appId `com.wooseokshim.babydiary`, `capacitor.config.ts`) / 아이폰 = PWA(홈화면 추가, `vite-plugin-pwa`) / 웹 = Vercel
 
 ## 주요 명령어
 ```bash
 npm run dev      # 개발 서버
-npm run build    # 빌드
+npm run build    # 빌드 (PWA manifest·서비스워커 포함)
 npx tsc --noEmit # 타입 체크
-npx cap add android && npx cap sync   # 안드로이드 (JDK 21 — samsung-health 프로젝트의 빌드 설정 참고)
+npm run icons    # src/assets/app-icon.svg → public/icons/*·assets/(icon·splash) 재생성 (sharp)
+npx cap sync android   # 웹 빌드를 안드로이드 프로젝트로 동기화
+cd android && ./gradlew.bat assembleDebug   # 디버그 APK 빌드 (JDK 21 — android/gradle.properties에 org.gradle.java.home 고정됨)
 ```
 
 ## 환경
@@ -26,9 +28,9 @@ npx cap add android && npx cap sync   # 안드로이드 (JDK 21 — samsung-heal
 | ---- | -- | ---- |
 | Supabase | 새 조직 `baby-diary`, 프로젝트 1개, Seoul 리전 (URL: `isouteawnehcyfufrhrw.supabase.co`) | couple-finance 조직은 무료 플랜 2개 한도 소진 — 별도 조직으로 새 무료 슬롯 확보. **실제 연결 완료(v0.4.0)**, `.env.local`에 URL/anon key 설정됨(gitignore 대상) |
 | 계정 | 부부 2계정 수동 생성, 회원가입 비활성화 | 실제 이메일/비밀번호는 보안상 이 저장소에 기록하지 않음 — 대시보드 Authentication에서 UID로 관리 |
-| Android JDK | `C:\java\jdk-21.0.11+10` (시스템 JAVA_HOME은 깨진 JDK11이므로 절대 사용 금지) | Capacitor/Gradle 빌드 시 samsung-health 프로젝트에서 검증됨 |
-| Android SDK | `C:\Users\PC\AppData\Local\Android\sdk` | `android/local.properties`의 `sdk.dir` |
-| Gradle | 8.14 | samsung-health에서 검증된 버전 |
+| Android JDK | `C:\java\jdk-21.0.11+10` (시스템 JAVA_HOME은 깨진 JDK11이므로 절대 사용 금지) | `android/gradle.properties`의 `org.gradle.java.home`에 고정(v0.7.0) — 시스템 환경변수에 의존하지 않음 |
+| Android SDK | `C:\Users\PC\AppData\Local\Android\sdk` | `android/local.properties`의 `sdk.dir`(gitignore 대상, 로컬 환경마다 재생성 필요) |
+| Gradle | 8.14.3 (`android/gradle/wrapper/gradle-wrapper.properties`) | Capacitor 8 기본 템플릿 버전 그대로 사용, `gradlew assembleDebug` 빌드 성공 확인(v0.7.0) |
 
 ## Mock 모드 (Supabase 연결 전 UI 검증용, 필요 시 `VITE_USE_MOCK=true`로 전환 가능)
 - `.env.local`의 `VITE_USE_MOCK=true`면 `src/lib/mockDb.ts`의 인메모리 데이터로 동작. `src/lib/supabase.ts`/`useMock` 플래그를 각 feature의 `api.ts`가 분기 처리. 현재는 실제 연결(`false`)이 기본값.
