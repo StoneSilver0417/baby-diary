@@ -115,7 +115,12 @@
     var(--paper-line) 1.6rem,
     var(--paper-line) calc(1.6rem + 1px)
   );
-  background-position: 0 0.4rem;
+  background-position: 0 0rem;
+}
+
+/* Hi Melody는 자간이 좁아 붙어 보이므로 살짝 띄워 손글씨 느낌을 살린다 */
+.font-hand {
+  letter-spacing: 0.02em;
 }
 
 @utility polaroid {

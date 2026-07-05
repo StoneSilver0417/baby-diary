@@ -2,13 +2,17 @@
 
 ## 현재 상태
 
-- **버전**: v0.9.1 (모바일 UX 버그 3건 수정: 시트 여백·안드로이드 뒤로가기·사진 스와이프)
+- **버전**: v0.9.2 (뒤로가기 재수정 + 줄노트·자간 시각 보정)
 - **빌드 상태**: `npx tsc --noEmit` 통과, `npm run build` 통과 (라우트 lazy loading으로 메인 번들 665KB→343KB, gzip 107KB)
 - **배포 상태**: **웹 배포 완료** — https://baby-diary-tau.vercel.app (Vercel 프로젝트 `waterdrop11s-projects/baby-diary`). 안드로이드는 디버그 APK를 **GitHub Release**로 배포(Play Store 미배포).
 - **실행 방법/URL**: 웹은 위 URL로 바로 접속(아이폰은 Safari로 열어 공유 버튼 → "홈 화면에 추가"로 PWA 설치). 안드로이드는 https://github.com/StoneSilver0417/baby-diary/releases/tag/android-latest 에서 GitHub 로그인 상태로 `app-debug.apk` 다운로드 후 설치(덮어 설치). 로컬 개발은 `npm run dev` → `.env.local`에 실제 Supabase URL/anon key 설정됨(`VITE_USE_MOCK=false`). 로그인 계정은 부부가 대시보드에서 만든 실제 이메일(별도 기록 필요 — 이 저장소엔 없음).
 
 ## 최근 작업
 
+- **뒤로가기 재수정 + 줄노트·자간 시각 보정 (v0.9.2)**: 사용자가 v0.9.1 뒤로가기 수정을 실기기에서 확인 후 재지적 — "이전에 갔던 탭들을 왔다갔다 하네".
+  - **원인**: `window.history.back()`이 브라우저 히스토리를 그대로 따라가다 보니, 지금까지 눌렀던 탭 전환(일기→성장→투자 등)까지 전부 히스토리 항목으로 쌓여 그 순서대로 되짚어가고 있었음. `src/lib/useAndroidBackButton.ts`를 히스토리 추적 대신 **고정 규칙**으로 교체: 현재 경로가 `/`(피드)가 아니면 무조건 `/`로 이동, `/`면 앱 종료. 탭을 아무리 옮겨다녀도 뒤로가기 한 번이면 항상 피드로 돌아가고, 피드에서 한 번 더 누르면 종료됨(안드로이드 바텀내비 표준 패턴). 실기기 재검증 필요.
+  - **줄노트 줄이 텍스트 기준선과 안 맞고 손글씨 자간이 좁아 붙어 보임**: `paper-lines` 유틸의 `background-position` 오프셋(0.4rem→0rem)을 조정해 각 줄 텍스트 바로 아래에 밑줄이 오도록 정렬. `.font-hand`에 `letter-spacing: 0.02em` 추가로 Hi Melody 특유의 좁은 자간을 살짝 벌림. Playwright 스크린샷으로 전/후 비교 확인(피드·상세·작성 화면 모두).
+  - 안드로이드 APK 재빌드 → GitHub Release(`android-latest`) 갱신, 웹은 자동 배포.
 - **모바일 UX 버그 3건 수정 (v0.9.1)**: 사용자가 실기기에서 지적.
   1. **마일스톤 등 하단 시트 저장 버튼이 기기 하단 버튼과 겹침**: `SheetContent`의 `side="bottom"` 변형에 `pb-safe` 누락 — Radix Dialog가 최상위 포털이라 AppShell의 안전영역 처리를 안 받음. `src/components/ui/sheet.tsx`에 `pb-safe` 추가로 모든 하단 시트(투자·성장 폼 전부)에 일괄 적용.
   2. **일기 상세에서 안드로이드 뒤로가기를 누르면 인앱 이동 대신 앱이 최소화됨**: `@capacitor/app` 플러그인이 아예 설치돼 있지 않아, 뒤로가기 버튼에 대한 리스너가 없어 기본 동작(앱 종료)만 발생하던 문제. `@capacitor/app` 설치 + `src/lib/useAndroidBackButton.ts` 신규(네이티브 플랫폼에서만 `backButton` 이벤트 구독, `canGoBack`이면 `history.back()`, 아니면(=메인) `App.exitApp()`) → `App.tsx`에 마운트. **실기기 재검증 필요**(Playwright로는 하드웨어 뒤로가기 재현 불가).

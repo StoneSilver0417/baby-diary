@@ -1,25 +1,31 @@
 import { useEffect } from 'react'
+import { useLocation, useNavigate } from 'react-router'
 import { Capacitor } from '@capacitor/core'
 import { App as CapacitorApp } from '@capacitor/app'
 
 /**
- * 안드로이드 하드웨어/제스처 뒤로가기 — 기본값은 그냥 앱을 종료시켜버림(플러그인 리스너가 없으면
- * WebView 히스토리를 확인하지 않음). 이전 화면이 있으면 그리로, 없으면(=메인) 앱을 종료하도록 연결.
+ * 안드로이드 하드웨어/제스처 뒤로가기.
+ * 브라우저 히스토리(window.history.back())를 그대로 따라가면 지금까지 들른
+ * 탭 전환 기록까지 전부 되짚어가며 "왔다갔다"하게 되므로, 대신 고정 규칙을 쓴다:
+ * 피드(홈)가 아니면 무조건 피드로, 피드에서는 앱을 종료.
  */
 export function useAndroidBackButton() {
+  const location = useLocation()
+  const navigate = useNavigate()
+
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return
 
-    const listenerPromise = CapacitorApp.addListener('backButton', ({ canGoBack }) => {
-      if (canGoBack) {
-        window.history.back()
-      } else {
+    const listenerPromise = CapacitorApp.addListener('backButton', () => {
+      if (location.pathname === '/') {
         CapacitorApp.exitApp()
+      } else {
+        navigate('/')
       }
     })
 
     return () => {
       listenerPromise.then((listener) => listener.remove())
     }
-  }, [])
+  }, [location.pathname, navigate])
 }
