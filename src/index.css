@@ -1,9 +1,10 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "@fontsource/hi-melody";
 
 @custom-variant dark (&:is(.dark *));
 
-/* 따뜻한 가족 앨범 테마 — 크림 배경 + 살구/코랄 포인트 */
+/* 그림일기 테마 — 크림 배경 + 살구/코랄 포인트 + 파스텔 스티커 컬러 */
 :root {
   --background: oklch(0.985 0.008 84);
   --foreground: oklch(0.32 0.03 50);
@@ -24,7 +25,19 @@
   --border: oklch(0.91 0.015 78);
   --input: oklch(0.91 0.015 78);
   --ring: oklch(0.68 0.14 40);
-  --radius: 0.75rem;
+  --radius: 1rem;
+
+  /* 스티커/장식용 파스텔 팔레트 */
+  --sticker-yellow: oklch(0.9 0.09 95);
+  --sticker-yellow-foreground: oklch(0.5 0.1 85);
+  --sticker-sky: oklch(0.88 0.06 235);
+  --sticker-sky-foreground: oklch(0.5 0.08 240);
+  --sticker-mint: oklch(0.88 0.08 165);
+  --sticker-mint-foreground: oklch(0.48 0.09 165);
+  --sticker-pink: oklch(0.88 0.07 15);
+  --sticker-pink-foreground: oklch(0.5 0.1 15);
+  --paper-line: oklch(0.9 0.02 78);
+  --tape: oklch(0.92 0.05 95 / 0.75);
 }
 
 @theme inline {
@@ -47,10 +60,19 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-sticker-yellow: var(--sticker-yellow);
+  --color-sticker-yellow-foreground: var(--sticker-yellow-foreground);
+  --color-sticker-sky: var(--sticker-sky);
+  --color-sticker-sky-foreground: var(--sticker-sky-foreground);
+  --color-sticker-mint: var(--sticker-mint);
+  --color-sticker-mint-foreground: var(--sticker-mint-foreground);
+  --color-sticker-pink: var(--sticker-pink);
+  --color-sticker-pink-foreground: var(--sticker-pink-foreground);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --font-hand: "Hi Melody", sans-serif;
 }
 
 @layer base {
@@ -74,4 +96,52 @@
 }
 @utility pt-safe {
   padding-top: env(safe-area-inset-top);
+}
+
+/* 그림일기 장식 유틸 (일기 탭 전용) */
+@utility paper-lines {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 1.6rem,
+    var(--paper-line) 1.6rem,
+    var(--paper-line) calc(1.6rem + 1px)
+  );
+  background-position: 0 0.4rem;
+}
+
+@utility polaroid {
+  background: white;
+  padding: 0.5rem 0.5rem 1.25rem;
+  box-shadow: 0 3px 10px oklch(0.32 0.03 50 / 0.18);
+  border-radius: 0.25rem;
+}
+
+@utility polaroid-tilt-left {
+  transform: rotate(-2deg);
+}
+@utility polaroid-tilt-right {
+  transform: rotate(1.5deg);
+}
+
+@utility tape {
+  position: relative;
+  &::before {
+    content: "";
+    position: absolute;
+    top: -0.6rem;
+    left: 50%;
+    width: 3rem;
+    height: 1.1rem;
+    translate: -50% 0;
+    rotate: -3deg;
+    background: var(--tape);
+    border: 1px solid oklch(0.32 0.03 50 / 0.08);
+  }
+}
+
+@utility sticker {
+  border-radius: 999px;
+  border-width: 1.5px;
+  border-style: solid;
 }

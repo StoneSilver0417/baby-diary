@@ -4,6 +4,7 @@ import { useAuth } from './AuthProvider'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Cloud, Footprint, Star, Sun } from '@/assets/doodles'
 
 export function LoginPage() {
   const { signIn } = useAuth()
@@ -20,10 +21,15 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center gap-8 bg-background px-6 pt-safe pb-safe">
+    <div className="relative flex min-h-dvh flex-col items-center justify-center gap-8 overflow-hidden bg-background px-6 pt-safe pb-safe">
+      <Sun className="absolute left-6 top-12 size-10 text-sticker-yellow-foreground/70" />
+      <Cloud className="absolute right-4 top-24 size-12 text-sticker-sky-foreground/60" />
+      <Star className="absolute bottom-28 left-8 size-7 text-sticker-pink-foreground/60" />
+      <Footprint className="absolute bottom-16 right-10 size-8 rotate-12 text-sticker-mint-foreground/60" />
+
       <div className="text-center">
-        <h1 className="text-2xl font-semibold text-foreground">육아일기</h1>
-        <p className="mt-1 text-sm text-muted-foreground">우리 가족만의 기록</p>
+        <h1 className="font-hand text-4xl font-semibold text-foreground">육아일기</h1>
+        <p className="mt-1 font-hand text-lg text-muted-foreground">우리 가족만의 기록</p>
       </div>
 
       <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">

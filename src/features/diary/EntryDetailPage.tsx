@@ -61,7 +61,7 @@ export function EntryDetailPage() {
         <button onClick={() => navigate(-1)} aria-label="뒤로">
           <ChevronLeft className="size-5" />
         </button>
-        <span className="text-sm font-medium">
+        <span className="font-hand text-lg font-medium">
           {entry.authorName} · {format(new Date(entry.entry_date), 'M월 d일')}
         </span>
         {isMyEntry && (
@@ -95,26 +95,34 @@ export function EntryDetailPage() {
         )}
       </header>
 
-      <EntryPhotos photos={entry.photos} />
+      {entry.photos.length > 0 && (
+        <div className="polaroid polaroid-tilt-right tape m-4 mb-0">
+          <EntryPhotos photos={entry.photos} />
+        </div>
+      )}
 
       <div className="p-5">
-        <p className="whitespace-pre-wrap text-sm text-foreground">{entry.content}</p>
+        <p className="paper-lines whitespace-pre-wrap px-1 py-1 font-hand text-lg leading-[1.6rem] text-foreground">
+          {entry.content}
+        </p>
 
         <button
           type="button"
           onClick={() => id && toggleLike.mutate({ entryId: id, like: !liked })}
           className={cn(
-            'mt-4 flex items-center gap-1.5 text-sm',
-            liked ? 'text-primary' : 'text-muted-foreground',
+            'sticker mt-4 flex items-center gap-1.5 px-3 py-1.5 text-sm',
+            liked
+              ? 'border-primary bg-sticker-pink text-sticker-pink-foreground'
+              : 'border-border text-muted-foreground',
           )}
         >
           <Heart className={cn('size-5', liked && 'fill-primary')} />
           좋아요 {entry.likedBy.length}
         </button>
 
-        <div className="mt-6 space-y-3">
+        <div className="mt-6 space-y-3 font-hand">
           {entry.comments.map((comment) => (
-            <div key={comment.id} className="flex items-start gap-2 text-sm">
+            <div key={comment.id} className="flex items-start gap-2 text-base">
               <div className="flex-1">
                 <span className="font-medium text-foreground">{authorOf(comment.author_id)}</span>{' '}
                 <span className="text-foreground">{comment.content}</span>

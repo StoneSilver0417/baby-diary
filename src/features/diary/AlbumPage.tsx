@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router'
+import { cn } from '@/lib/utils'
 import { useFeed, usePhotoUrls } from './useDiaryQueries'
 import { DiaryViewSegment } from './DiaryViewSegment'
 
@@ -27,18 +28,23 @@ export function AlbumPage() {
       </header>
 
       {photos.length === 0 ? (
-        <p className="p-8 text-center text-sm text-muted-foreground">아직 사진이 없어요.</p>
+        <p className="p-8 text-center font-hand text-lg text-muted-foreground">
+          아직 사진이 없어요.
+        </p>
       ) : (
-        <div className="grid grid-cols-3 gap-0.5 p-0.5">
+        <div className="grid grid-cols-3 gap-3 p-4">
           {photos.map((photo, i) => {
             const url = results[i]?.data
             return (
               <button
                 key={`${photo.entryId}-${i}`}
                 onClick={() => navigate(`/entry/${photo.entryId}`)}
-                className="aspect-square overflow-hidden bg-muted"
+                className={cn(
+                  'polaroid aspect-square overflow-hidden',
+                  i % 2 === 0 ? 'polaroid-tilt-left' : 'polaroid-tilt-right',
+                )}
               >
-                {url && <img src={url} alt="" className="size-full object-cover" />}
+                {url && <img src={url} alt="" className="size-full rounded-[2px] object-cover" />}
               </button>
             )
           })}

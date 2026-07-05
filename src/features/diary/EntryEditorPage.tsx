@@ -4,7 +4,7 @@ import { format } from 'date-fns'
 import { toast } from 'sonner'
 import { X } from 'lucide-react'
 import { useAuth } from '@/features/auth/AuthProvider'
-import { useHouseholdId, useProfiles } from '@/features/diary/useDiaryQueries'
+import { useHouseholdId, usePhotoUrls, useProfiles } from '@/features/diary/useDiaryQueries'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
@@ -49,6 +49,8 @@ export function EntryEditorPage() {
   }, [userId, date])
 
   const totalPhotoCount = existingPhotos.length + newPhotos.length
+  // storage_path는 실모드에선 스토리지 경로라 img src로 못 씀 — 서명 URL로 변환
+  const existingPhotoUrls = usePhotoUrls(existingPhotos.map((p) => p.storage_path))
 
   async function handlePickPhotos(files: FileList | null) {
     if (!files || files.length === 0) return
@@ -101,16 +103,22 @@ export function EntryEditorPage() {
 
   return (
     <div className="flex min-h-full flex-col gap-5 p-5 pt-safe">
-      <h1 className="text-lg font-semibold text-foreground">
+      <h1 className="font-hand text-xl font-semibold text-foreground">
         {entryId ? '일기 수정' : '일기 작성'}
       </h1>
 
       <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
 
-      <div className="flex gap-2">
-        {existingPhotos.map((photo) => (
-          <div key={photo.id} className="relative size-20 overflow-hidden rounded-md bg-muted">
-            <img src={photo.storage_path} alt="" className="size-full object-cover" />
+      <div className="flex flex-wrap gap-3">
+        {existingPhotos.map((photo, i) => (
+          <div key={photo.id} className="polaroid relative size-24 shrink-0">
+            {existingPhotoUrls[i]?.data && (
+              <img
+                src={existingPhotoUrls[i].data}
+                alt=""
+                className="size-full rounded-[2px] object-cover"
+              />
+            )}
             <button
               type="button"
               onClick={() => removeExistingPhoto(photo.id)}
@@ -122,8 +130,8 @@ export function EntryEditorPage() {
           </div>
         ))}
         {newPhotoPreviews.map((url, i) => (
-          <div key={url} className="relative size-20 overflow-hidden rounded-md bg-muted">
-            <img src={url} alt="" className="size-full object-cover" />
+          <div key={url} className="polaroid relative size-24 shrink-0">
+            <img src={url} alt="" className="size-full rounded-[2px] object-cover" />
             <button
               type="button"
               onClick={() => removeNewPhoto(i)}
@@ -138,7 +146,7 @@ export function EntryEditorPage() {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="flex size-20 items-center justify-center rounded-md border border-dashed border-border text-2xl text-muted-foreground"
+            className="flex size-24 shrink-0 items-center justify-center rounded-lg border-2 border-dashed border-border text-2xl text-muted-foreground"
             aria-label="사진 추가"
           >
             +
@@ -161,7 +169,7 @@ export function EntryEditorPage() {
         value={content}
         onChange={(e) => setContent(e.target.value)}
         placeholder="오늘 있었던 일을 기록해 보세요"
-        className="min-h-40 flex-1"
+        className="paper-lines min-h-40 flex-1 font-hand text-lg leading-[1.6rem]"
       />
 
       <Button onClick={handleSubmit} disabled={saveEntry.isPending}>

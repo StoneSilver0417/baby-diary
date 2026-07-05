@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { childAge } from '@/lib/childAge'
+import { Sun } from '@/assets/doodles'
 import { useChild, useFeed, useProfiles } from './useDiaryQueries'
 import { useNewBadge } from './useNewBadge'
 import { EntryPhotos } from './EntryPhotos'
@@ -42,20 +43,25 @@ export function FeedPage() {
         </div>
       </header>
 
-      <div className="divide-y divide-border">
+      <div className="space-y-4 p-4">
         {isLoading &&
           Array.from({ length: 2 }).map((_, i) => (
-            <div key={i} className="space-y-3 p-5">
+            <div key={i} className="space-y-3 rounded-2xl border border-border p-4">
               <Skeleton className="aspect-square w-full" />
               <Skeleton className="h-4 w-3/4" />
             </div>
           ))}
 
         {feed?.map((entry) => (
-          <Link key={entry.id} to={`/entry/${entry.id}`} className="block p-5">
-            <div className="mb-2 flex items-center gap-2">
-              <span className="text-sm font-medium text-foreground">{entry.authorName}</span>
-              <span className="text-xs text-muted-foreground">
+          <Link
+            key={entry.id}
+            to={`/entry/${entry.id}`}
+            className="block rounded-2xl border border-border bg-card p-4 shadow-sm"
+          >
+            <div className="mb-3 flex items-center gap-2 font-hand text-lg text-foreground">
+              <Sun className="size-6 shrink-0 text-sticker-yellow-foreground" />
+              <span className="font-medium">{entry.authorName}</span>
+              <span className="text-muted-foreground">
                 {format(new Date(entry.entry_date), 'M월 d일')}
               </span>
               {isNew(entry) && (
@@ -63,9 +69,15 @@ export function FeedPage() {
               )}
             </div>
 
-            <EntryPhotos photos={entry.photos} className="mb-3 rounded-lg" />
+            {entry.photos.length > 0 && (
+              <div className="polaroid polaroid-tilt-left tape mb-3">
+                <EntryPhotos photos={entry.photos} className="rounded-sm" />
+              </div>
+            )}
 
-            <p className="whitespace-pre-wrap text-sm text-foreground">{entry.content}</p>
+            <p className="paper-lines whitespace-pre-wrap px-1 py-1 font-hand text-base leading-[1.6rem] text-foreground">
+              {entry.content}
+            </p>
 
             <div className="mt-3 flex items-center gap-4 text-sm text-muted-foreground">
               <span

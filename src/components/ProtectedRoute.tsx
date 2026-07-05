@@ -1,16 +1,13 @@
 import { Navigate, Outlet, useLocation } from 'react-router'
 import { useAuth } from '@/features/auth/AuthProvider'
+import { SplashScreen } from '@/components/SplashScreen'
 
 export function ProtectedRoute() {
   const { userId } = useAuth()
   const location = useLocation()
 
   if (userId === undefined) {
-    return (
-      <div className="flex h-dvh items-center justify-center bg-background text-muted-foreground">
-        불러오는 중…
-      </div>
-    )
+    return <SplashScreen />
   }
 
   if (userId === null) {
