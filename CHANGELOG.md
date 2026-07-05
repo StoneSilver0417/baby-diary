@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-07-05 (v0.7.1)
+
+### 변경 사항
+- **버그 수정 — 실기기에서 FAB "+" 버튼이 하단 탭바에 가려 잘림**: v0.7.0에서 빌드한 디버그 APK를 실기기에 설치해 확인한 사용자가 발견. `FeedPage`/`GrowthPage`/`InvestPage`의 플로팅 추가 버튼이 `fixed bottom-24`(뷰포트 하단에서 고정 96px)로 배치돼 있었는데, `AppShell`의 하단 탭바는 `pb-safe`(`env(safe-area-inset-bottom)`)를 적용해 제스처 내비게이션이 있는 기기에서는 96px보다 더 커진다 — 그 결과 FAB의 아래쪽이 탭바에 가려 잘려 보였음. `src/index.css`에 `pb-nav`(`AppShell`의 `<main>` 하단 여백)·`bottom-fab`(FAB 위치) 유틸을 신설해 둘 다 `calc(... + env(safe-area-inset-bottom))`로 안전영역을 계산에 포함하도록 수정.
+
+### 의사결정 배경
+- **안전영역을 무시한 고정 px/rem 값이 근본 원인**: 에뮬레이터·데스크톱 브라우저에서는 `safe-area-inset-bottom`이 0이라 `bottom-24`/`pb-20` 같은 고정값도 문제없이 보였다 — 이번 세션 전체에서 Playwright 검증은 데스크톱 크로미움 기반이라 이 값이 항상 0이었고, 실제 제스처 내비 기기(실기기)에서 처음 드러난 회귀였다. **모바일 세이프에어리어가 관여하는 레이아웃은 데스크톱 브라우저 검증만으로는 재현되지 않는다**는 걸 보여준 사례 — 향후 유사한 `fixed`/`sticky` 하단 배치 요소를 추가할 때는 처음부터 `env(safe-area-inset-bottom)`을 계산에 포함해야 한다.
+- **하드코딩된 `bottom-24`를 유틸(`bottom-fab`)로 추출**: 같은 패턴(플로팅 액션 버튼)이 세 화면(FeedPage·GrowthPage·InvestPage)에 반복돼 있어, 매직넘버를 각 파일에서 개별 수정하는 대신 공용 유틸 하나로 추출해 앞으로 같은 실수가 반복되지 않도록 함.
+
 ## 2026-07-05 (v0.7.0)
 
 ### 변경 사항

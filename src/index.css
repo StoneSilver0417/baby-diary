@@ -97,6 +97,14 @@
 @utility pt-safe {
   padding-top: env(safe-area-inset-top);
 }
+/* 하단 탭바(AppShell)의 실제 높이(콘텐츠+safe-area)만큼 스크롤 콘텐츠를 띄움 */
+@utility pb-nav {
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+}
+/* 하단 탭바 위에 떠 있는 FAB — safe-area가 큰 기기(제스처 내비 등)에서도 탭바에 가리지 않도록 */
+@utility bottom-fab {
+  bottom: calc(6rem + env(safe-area-inset-bottom));
+}
 
 /* 그림일기 장식 유틸 (일기 탭 전용) */
 @utility paper-lines {

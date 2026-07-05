@@ -166,7 +166,7 @@ export function InvestPage() {
         <SheetTrigger asChild>
           <button
             type="button"
-            className="fixed bottom-24 right-5 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg"
+            className="bottom-fab fixed right-5 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg"
             aria-label="거래·배당·메모 추가"
           >
             <Plus className="size-6" />

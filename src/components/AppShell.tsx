@@ -19,7 +19,7 @@ export function AppShell() {
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
-      <main className="flex-1 overflow-y-auto pb-20">
+      <main className="flex-1 overflow-y-auto pb-nav">
         <IosInstallBanner />
         <Outlet />
       </main>

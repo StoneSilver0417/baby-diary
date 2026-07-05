@@ -140,7 +140,7 @@ export function GrowthPage() {
         <SheetTrigger asChild>
           <button
             type="button"
-            className="fixed bottom-24 right-5 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg"
+            className="bottom-fab fixed right-5 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg"
             aria-label={tab === 'records' ? '성장 기록 추가' : '마일스톤 추가'}
           >
             <Plus className="size-6" />
