@@ -10,7 +10,17 @@
 
 ### 의사결정 배경
 - **PowerShell 파이프로 등록한 환경변수가 손상됨 — 원인과 대응**: `"value" | npx vercel env add NAME production` 방식으로 처음 등록했을 때 `vercel`이 "Value contains newlines" 경고를 냈다. 의심스러워 `vercel env pull`로 실제 저장된 값을 확인해보니 `VITE_SUPABASE_ANON_KEY`가 `"﻿sb_publishable_...\r\n"`처럼 **BOM(U+FEFF)이 앞에, 리터럴 CRLF가 뒤에 붙은 채로 저장**돼 있었다. Windows PowerShell이 파이프로 문자열을 흘려보낼 때 기본적으로 UTF-16LE+BOM, CRLF 개행으로 인코딩하기 때문 — 이 값 그대로였다면 Supabase anon key가 실제 키와 문자 단위로 달라 프로덕션에서 로그인 자체가 조용히 실패했을 것이다. 세 변수를 모두 삭제하고 Bash의 `printf '%s' "value"`(개행 없음, UTF-8, BOM 없음)로 재등록해 `vercel env pull`로 재검증했다. **교훈**: 이 프로젝트에서 PowerShell 파이프로 외부 서비스(CLI)에 값을 전달할 때는 항상 저장된 값을 다시 읽어 검증하고, 가능하면 Bash의 `printf`를 우선 사용할 것 — 특히 실제 서비스 키처럼 문자 하나만 틀려도 조용히 실패하는 값에서는 눈으로 보이지 않는 손상(BOM·개행)이 치명적이다.
-- **GitHub 자동 연동 실패를 원인 추적하지 않고 CLI 직접 배포로 우회**: `vercel link`가 GitHub 저장소 연결에 실패했지만, 이 세션의 목표(아이폰에서 설치 가능한 URL 확보)에는 자동 배포 여부가 필수가 아니었다. 원인 조사에 시간을 쓰는 대신 `vercel --prod`로 즉시 배포하는 실용적 경로를 택했고, GitHub 연동은 handoff.md TODO로 남겨 다음에 필요할 때(반복 배포 자동화가 중요해질 때) 다시 다루기로 함.
+- **GitHub 자동 연동 실패를 원인 추적하지 않고 CLI 직접 배포로 우회(임시)**: `vercel link`가 GitHub 저장소 연결에 실패했지만, 이 세션의 1차 목표(아이폰에서 설치 가능한 URL 확보)에는 자동 배포 여부가 필수가 아니었다. 원인 조사에 시간을 쓰는 대신 `vercel --prod`로 즉시 배포하는 실용적 경로를 먼저 택하고 GitHub 연동은 TODO로 남겼다 — 바로 다음 요청("깃허브 TODO 진행")으로 마저 처리함(아래 참고).
+
+## 2026-07-05 (v0.8.1)
+
+### 변경 사항
+- **Vercel-GitHub 자동 배포 연동 완료**: CLI(`vercel link`/`vercel git connect`)로는 GitHub 저장소 연결이 계속 실패해, 사용자가 Vercel 대시보드(Project Settings → Git → Connect Git Repository)에서 GitHub 앱 접근 권한을 직접 승인하도록 안내. 이후 `npx vercel git connect`가 "already connected"를 반환해 연결을 CLI로 재확인.
+- 로컬에만 있던 커밋 5개(v0.5.0~v0.8.0)를 `git push origin master`로 처음 push해 실전 검증: push 23초 만에 새 Production 배포가 자동 생성되고 `Ready` 상태로 전환, 프로덕션 alias(`baby-diary-tau.vercel.app`)도 새 배포로 자동 갱신됨을 확인. 이제 `master` push만으로 재배포됨(수동 `vercel --prod` 불필요).
+
+### 의사결정 배경
+- **CLI 실패 시 브라우저 승인으로 전환한 이유**: `vercel link`/`vercel git connect` 모두 "Failed to connect... make sure you have access"라는 동일한 에러만 반복해 CLI 쪽에서 더 파고들 단서가 없었다 — 이런 에러는 대개 Vercel의 GitHub App이 해당 저장소에 대한 설치 권한 자체를 받지 못한 상태(OAuth/App 설치는 브라우저 플로우 전용)라, CLI로 재시도만 반복하기보다 사용자에게 대시보드에서 권한을 승인받는 쪽이 더 빠르고 확실했다.
+- **연결 성공을 "already connected" 메시지만으로 끝내지 않고 실제 push로 검증**: 설정 화면상 "연결됨" 표시와 실제 자동 배포 파이프라인 동작은 다를 수 있어(예: 웹훅 미등록 등), 마침 로컬에 밀려있던 실제 커밋들을 push해 종단간(E2E)으로 확인했다 — 배포가 실패했다면 그 자체로 롤백 없이 바로 원인 파악이 가능했던 시점이라 리스크가 낮았다.
 
 ## 2026-07-05 (v0.7.1)
 
