@@ -1,6 +1,7 @@
 import { Link, Outlet, useLocation } from 'react-router'
 import { BookHeart, LineChart, Ruler, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { IosInstallBanner } from '@/components/IosInstallBanner'
 
 const tabs = [
   { to: '/', label: '일기', icon: BookHeart, prefixes: ['/', '/calendar', '/album', '/write', '/entry', '/search'] },
@@ -19,6 +20,7 @@ export function AppShell() {
   return (
     <div className="flex min-h-dvh flex-col bg-background">
       <main className="flex-1 overflow-y-auto pb-20">
+        <IosInstallBanner />
         <Outlet />
       </main>
       <nav className="fixed inset-x-0 bottom-0 border-t border-border bg-card pb-safe">

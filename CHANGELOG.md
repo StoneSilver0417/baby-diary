@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-07-05 (v0.6.0)
+
+### 변경 사항
+- **PWA 설정**(`vite-plugin-pwa`): handoff TODO의 다음 항목을 실행 — 아이폰이 애플 개발자 계정 없이는 네이티브 빌드가 불가능한 하드 제약이 있어 PWA 홈화면 설치가 유일한 배포 경로.
+  - 앱 아이콘을 직접 제작(`src/assets/app-icon.svg`): v0.5.0에서 확립한 그림일기 비주얼 언어(폴라로이드+손그림)를 그대로 재사용 — 코랄 배경에 폴라로이드 사진(해+언덕 미니 장면)과 별 스티커. 마스크러블 아이콘 규칙(중앙 80% 안전영역)에 맞춰 좌표를 계산하고, 원형 크롭 시뮬레이션으로 실제 클리핑 여부를 검증.
+  - `scripts/generate-icons.mjs`(`npm run icons`, `sharp` 사용)로 마스터 SVG → 192/512/maskable-512/apple-touch-icon(180)/favicon(32) PNG 일괄 생성. 기존 Vite 스캐폴드 기본 아이콘(`public/favicon.svg`, 보라색 Vite 로고) 제거.
+  - `vite.config.ts`에 manifest(이름·설명·테마색·배경색·standalone·아이콘 3종·`lang: 'ko'`) + `registerType: 'autoUpdate'` + workbox `generateSW`(JS/CSS/HTML/폰트만 프리캐시) 설정.
+  - `index.html`에 `theme-color`·`apple-touch-icon`·`mobile-web-app-capable`(신)·`apple-mobile-web-app-capable`(구, iOS Safari 전용) 메타 태그 추가.
+  - **신규 `IosInstallBanner.tsx`**: iOS Safari + 미설치 상태에서만 "홈 화면에 추가" 안내(그림일기 sticker 톤 재사용), 닫으면 `localStorage`로 영구 숨김. `AppShell.tsx`에 배치.
+  - Playwright로 서비스워커 실제 등록/활성화 확인, 마스크러블 아이콘 원형 크롭 시뮬레이션, iOS UA 오버라이드로 배너 노출·닫기 후 미재노출 확인. 콘솔 에러 0건.
+
+### 의사결정 배경
+- **오프라인 데이터 캐싱은 의도적으로 하지 않음**: workbox `generateSW`의 `globPatterns`을 빌드 산출물(JS/CSS/HTML/폰트)로 한정하고 Supabase API에는 런타임 캐싱 규칙을 추가하지 않았다 — 육아일기·투자 데이터는 가족 간 실시간 공유가 핵심 가치라 오래된 캐시를 보여주는 것이 사진 앱의 "새 글 확인" 경험을 해칠 수 있음. 앱 셸(로그인 화면까지)만 오프라인에서 뜨는 정도가 v1 목표.
+- **아이콘 모티프를 새로 구상하지 않고 기존 그림일기 언어를 재사용**: 이미 v0.5.0에서 폴라로이드+손그림 스타일이 사용자 검증을 거쳤으므로, 앱 아이콘도 같은 언어를 쓰는 것이 "홈 화면 아이콘을 눌렀을 때 앱 내부와 톤이 이어지는" 일관성을 준다. 완전히 새로운 로고를 디자인하는 것보다 리스크가 적음.
+- **아이콘을 SVG 마스터 + 스크립트 래스터화 방식으로**: PNG를 직접 여러 장 그리는 대신 SVG 하나를 유지하고 `sharp`로 필요한 모든 크기를 뽑아내면, 나중에 아이콘을 수정할 때 좌표 하나만 고치고 `npm run icons`만 다시 실행하면 되어 유지보수가 쉬움.
+- **`apple-mobile-web-app-capable`(deprecated) 유지**: Chrome 콘솔은 이 메타 태그를 deprecated로 경고하지만, 표준 `mobile-web-app-capable`는 iOS Safari에서 아직 인식되지 않아 아이폰 홈화면 standalone 모드가 이 태그에 의존한다. 경고를 없애려 구버전을 지우면 정작 PWA의 핵심 타깃인 아이폰에서 기능이 깨지므로, 두 태그를 함께 두고 경고는 감수하기로 결정.
+
 ## 2026-07-05 (v0.5.0)
 
 ### 변경 사항

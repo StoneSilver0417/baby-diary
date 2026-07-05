@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="#d97757" />
+
+  <!-- 폴라로이드 그림자 -->
+  <rect x="266" y="226" width="520" height="600" rx="20" fill="#00000018" />
+
+  <!-- 폴라로이드 카드 -->
+  <rect x="252" y="212" width="520" height="600" rx="20" fill="#fffaf3" />
+
+  <!-- 사진 영역 -->
+  <clipPath id="photoClip">
+    <rect x="276" y="236" width="472" height="380" rx="8" />
+  </clipPath>
+  <rect x="276" y="236" width="472" height="380" rx="8" fill="#bfe3d6" />
+  <g clip-path="url(#photoClip)">
+    <circle cx="628" cy="316" r="50" fill="#f6c667" />
+    <path
+      d="M276 560 Q400 470 512 505 T748 540 V616 H276 Z"
+      fill="#8fcdb0"
+    />
+  </g>
+
+  <!-- 손글씨 캡션 느낌의 줄 -->
+  <line x1="300" y1="660" x2="700" y2="660" stroke="#d8cdb8" stroke-width="14" stroke-linecap="round" />
+  <line x1="300" y1="706" x2="620" y2="706" stroke="#d8cdb8" stroke-width="14" stroke-linecap="round" />
+
+  <!-- 별 스티커 -->
+  <circle cx="730" cy="270" r="64" fill="#ffffff" />
+  <path
+    d="M730 218 L751 262 L800 268 L764 301 L774 349 L730 325 L686 349 L696 301 L660 268 L709 262 Z"
+    fill="#e0785a"
+  />
+</svg>
