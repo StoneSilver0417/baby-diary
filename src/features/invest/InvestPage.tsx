@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { format } from 'date-fns'
-import { Plus } from 'lucide-react'
+import { Plus, X } from 'lucide-react'
 import {
   Sheet,
   SheetContent,
@@ -12,11 +12,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { useAuth } from '@/features/auth/AuthProvider'
 import { useChild, useHouseholdId, useProfiles } from '@/features/diary/useDiaryQueries'
 import { cn } from '@/lib/utils'
 import { computeHoldings, enrichHoldings, type EnrichedHolding } from './holdings'
 import { computeYearlySummary } from './summary'
-import { useDividends, useNotes, useTrades, usePrices, useUpsertPrice } from './useInvestQueries'
+import {
+  useDeleteDividend,
+  useDeleteNote,
+  useDeleteTrade,
+  useDividends,
+  useNotes,
+  useTrades,
+  usePrices,
+  useUpsertPrice,
+} from './useInvestQueries'
 import { TradeForm } from './TradeForm'
 import { NoteForm } from './NoteForm'
 import { DividendForm } from './DividendForm'
@@ -24,15 +34,19 @@ import { DividendForm } from './DividendForm'
 type TimelineItem =
   | { type: 'trade'; date: string; id: string; label: string }
   | { type: 'dividend'; date: string; id: string; label: string }
-  | { type: 'note'; date: string; id: string; label: string; authorName: string }
+  | { type: 'note'; date: string; id: string; label: string; authorName: string; authorId: string }
 
 export function InvestPage() {
+  const { userId } = useAuth()
   const { data: child } = useChild()
   const { data: profiles } = useProfiles()
   const { data: trades } = useTrades()
   const { data: notes } = useNotes()
   const { data: dividends } = useDividends()
   const { data: prices } = usePrices()
+  const deleteTrade = useDeleteTrade()
+  const deleteDividend = useDeleteDividend()
+  const deleteNote = useDeleteNote()
   const [sheetOpen, setSheetOpen] = useState(false)
   const [priceTarget, setPriceTarget] = useState<EnrichedHolding | null>(null)
 
@@ -61,6 +75,7 @@ export function InvestPage() {
       id: n.id,
       label: n.content,
       authorName: profiles?.find((p) => p.id === n.author_id)?.display_name ?? '',
+      authorId: n.author_id,
     })),
   ].sort((a, b) => b.date.localeCompare(a.date))
 
@@ -145,15 +160,35 @@ export function InvestPage() {
 
       {/* 타임라인 */}
       <div className="divide-y divide-border">
-        {timeline.map((item) => (
-          <div key={`${item.type}-${item.id}`} className="p-5">
-            <div className="mb-1 flex items-center gap-2 text-xs text-muted-foreground">
-              <span>{format(new Date(item.date), 'M월 d일')}</span>
-              {item.type === 'note' && <span>{item.authorName}</span>}
+        {timeline.map((item) => {
+          const canDelete = item.type !== 'note' || item.authorId === userId
+          function handleDelete() {
+            if (item.type === 'trade') deleteTrade.mutate(item.id)
+            else if (item.type === 'dividend') deleteDividend.mutate(item.id)
+            else deleteNote.mutate(item.id)
+          }
+          return (
+            <div key={`${item.type}-${item.id}`} className="flex items-start justify-between p-5">
+              <div>
+                <div className="mb-1 flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>{format(new Date(item.date), 'M월 d일')}</span>
+                  {item.type === 'note' && <span>{item.authorName}</span>}
+                </div>
+                <p className="text-sm text-foreground">{item.label}</p>
+              </div>
+              {canDelete && (
+                <button
+                  type="button"
+                  aria-label="기록 삭제"
+                  className="mt-0.5 shrink-0 text-muted-foreground"
+                  onClick={handleDelete}
+                >
+                  <X className="size-4" />
+                </button>
+              )}
             </div>
-            <p className="text-sm text-foreground">{item.label}</p>
-          </div>
-        ))}
+          )
+        })}
         {timeline.length === 0 && (
           <p className="p-8 text-center text-sm text-muted-foreground">
             아직 기록된 거래·배당·메모가 없어요.

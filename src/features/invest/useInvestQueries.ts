@@ -4,6 +4,9 @@ import {
   addDividend,
   addNote,
   addTrade,
+  deleteDividend,
+  deleteNote,
+  deleteTrade,
   getDividends,
   getNotes,
   getPrices,
@@ -35,6 +38,14 @@ export function useAddDividend() {
   })
 }
 
+export function useDeleteDividend() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: deleteDividend,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.invest.timeline }),
+  })
+}
+
 export function useUpsertPrice() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -59,10 +70,26 @@ export function useAddTrade() {
   })
 }
 
+export function useDeleteTrade() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: deleteTrade,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.invest.timeline }),
+  })
+}
+
 export function useAddNote() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: addNote,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.invest.timeline }),
+  })
+}
+
+export function useDeleteNote() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: deleteNote,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.invest.timeline }),
   })
 }

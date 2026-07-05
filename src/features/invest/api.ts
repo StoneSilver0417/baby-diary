@@ -36,6 +36,17 @@ export async function addTrade(input: Omit<Trade, 'id'>): Promise<Trade> {
   return data as Trade
 }
 
+export async function deleteTrade(id: string): Promise<void> {
+  if (useMock) {
+    await delay(100)
+    const idx = mockState.trades.findIndex((t) => t.id === id)
+    if (idx >= 0) mockState.trades.splice(idx, 1)
+    return
+  }
+  const { error } = await supabase.from('trades').delete().eq('id', id)
+  if (error) throw error
+}
+
 export async function addNote(input: Omit<InvestNote, 'id'>): Promise<InvestNote> {
   if (useMock) {
     await delay(200)
@@ -46,6 +57,17 @@ export async function addNote(input: Omit<InvestNote, 'id'>): Promise<InvestNote
   const { data, error } = await supabase.from('invest_notes').insert(input).select().single()
   if (error) throw error
   return data as InvestNote
+}
+
+export async function deleteNote(id: string): Promise<void> {
+  if (useMock) {
+    await delay(100)
+    const idx = mockState.notes.findIndex((n) => n.id === id)
+    if (idx >= 0) mockState.notes.splice(idx, 1)
+    return
+  }
+  const { error } = await supabase.from('invest_notes').delete().eq('id', id)
+  if (error) throw error
 }
 
 export async function getDividends(): Promise<Dividend[]> {
@@ -68,6 +90,17 @@ export async function addDividend(input: Omit<Dividend, 'id'>): Promise<Dividend
   const { data, error } = await supabase.from('dividends').insert(input).select().single()
   if (error) throw error
   return data as Dividend
+}
+
+export async function deleteDividend(id: string): Promise<void> {
+  if (useMock) {
+    await delay(100)
+    const idx = mockState.dividends.findIndex((d) => d.id === id)
+    if (idx >= 0) mockState.dividends.splice(idx, 1)
+    return
+  }
+  const { error } = await supabase.from('dividends').delete().eq('id', id)
+  if (error) throw error
 }
 
 export async function getPrices(): Promise<StockPrice[]> {

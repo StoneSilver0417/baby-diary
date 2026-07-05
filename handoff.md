@@ -2,13 +2,18 @@
 
 ## 현재 상태
 
-- **버전**: v0.8.1 (Vercel 프로덕션 배포 + GitHub 자동 배포 연동 완료)
+- **버전**: v0.8.2 (투자일기 삭제 기능 추가)
 - **빌드 상태**: `npx tsc --noEmit` 통과, `npm run build` 통과, 안드로이드 `gradlew.bat assembleDebug` 통과
 - **배포 상태**: **웹 배포 완료** — https://baby-diary-tau.vercel.app (Vercel 프로젝트 `waterdrop11s-projects/baby-diary`). 안드로이드는 디버그 APK 로컬 생성까지(Play Store 미배포).
 - **실행 방법/URL**: 웹은 위 URL로 바로 접속(아이폰은 Safari로 열어 공유 버튼 → "홈 화면에 추가"로 PWA 설치). 로컬 개발은 `npm run dev` → `.env.local`에 실제 Supabase URL/anon key 설정됨(`VITE_USE_MOCK=false`). 로그인 계정은 부부가 대시보드에서 만든 실제 이메일(별도 기록 필요 — 이 저장소엔 없음).
 
 ## 최근 작업
 
+- **버그 수정 — 투자일기에 수정·삭제 수단이 전혀 없었음**: 사용자가 "수정하는게 안보임 삭제버튼이나"로 지적. 확인해보니 `src/features/invest/api.ts`에는 거래(trades)·배당(dividends)·메모(invest_notes) 모두 추가(add)/조회(get)만 있고 삭제 함수 자체가 없었음(성장 탭은 이미 삭제가 있던 것과 대조적). RLS는 이미 삭제를 허용하고 있어(`trades_all`/`dividends_all`은 household 전체, `invest_notes_delete_own`은 작성자 본인만) 스키마 변경 없이 앱 레이어만 추가하면 됐음.
+  - `deleteTrade`/`deleteDividend`/`deleteNote`를 `api.ts`에, `useDeleteTrade`/`useDeleteDividend`/`useDeleteNote`를 `useInvestQueries.ts`에 추가(성장 탭의 `useDeleteGrowthRecord`와 동일 패턴).
+  - `InvestPage.tsx` 타임라인 각 항목에 `X` 삭제 버튼 추가 — 메모는 본인 글에만 노출(`author_id === userId`), 거래·배당은 household 전체가 삭제 가능(성장 기록과 동일하게 부부 공용 데이터라는 전제).
+  - **수정(edit) 기능은 이번에 추가하지 않음** — 성장 탭도 삭제만 지원하고(수정 UI 없음) 그 패턴이 이미 이 앱에서 받아들여지고 있어 일관성을 위해 동일하게 삭제 후 재작성 방식으로 맞춤. `invest_notes` 테이블은 RLS에 update 정책 자체가 없어 진짜 수정 UI를 만들려면 마이그레이션이 추가로 필요함 — 필요하면 별도로 요청.
+  - Playwright(mock 모드)로 배당 삭제 확인: 항목이 사라지고 연도별 요약(배당 합계)도 즉시 갱신됨. 콘솔 에러 0건.
 - **Vercel 프로덕션 배포 + GitHub 자동 배포 연동**: 사용자가 "아이폰은 어떻게 설치?"라고 물어본 데서 시작 — 아이폰은 PWA만 가능하고 PWA는 HTTPS로 배포된 URL이 있어야 홈화면 추가·서비스워커가 동작하므로 배포를 진행.
   - `npx vercel link --yes --project baby-diary`로 프로젝트 생성.
   - 프로덕션 환경변수 3개 등록(`VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`/`VITE_USE_MOCK=false`).
@@ -24,6 +29,7 @@
 - 안드로이드 실기기 재검증 필요: FAB 잘림 수정 반영 APK를 아직 실기기에서 재확인하지 못함.
 - Release 서명 키스토어는 아직 없음(debug 빌드까지만).
 - `src/types/database.ts`는 여전히 수동 작성 타입(gen-types 미적용).
+- 투자일기 거래·배당·메모는 삭제만 가능, 수정(edit) UI는 없음(성장 탭과 동일한 의도된 범위). 메모 수정까지 필요해지면 `invest_notes`에 update RLS 정책 추가부터 필요.
 - claude.ai/design 연동, Cloudflare R2 사진 분리는 보류 상태(설계만 `docs/r2-photo-plan.md`에 보존).
 
 ## 다음 TODO

@@ -12,6 +12,15 @@
 - **PowerShell 파이프로 등록한 환경변수가 손상됨 — 원인과 대응**: `"value" | npx vercel env add NAME production` 방식으로 처음 등록했을 때 `vercel`이 "Value contains newlines" 경고를 냈다. 의심스러워 `vercel env pull`로 실제 저장된 값을 확인해보니 `VITE_SUPABASE_ANON_KEY`가 `"﻿sb_publishable_...\r\n"`처럼 **BOM(U+FEFF)이 앞에, 리터럴 CRLF가 뒤에 붙은 채로 저장**돼 있었다. Windows PowerShell이 파이프로 문자열을 흘려보낼 때 기본적으로 UTF-16LE+BOM, CRLF 개행으로 인코딩하기 때문 — 이 값 그대로였다면 Supabase anon key가 실제 키와 문자 단위로 달라 프로덕션에서 로그인 자체가 조용히 실패했을 것이다. 세 변수를 모두 삭제하고 Bash의 `printf '%s' "value"`(개행 없음, UTF-8, BOM 없음)로 재등록해 `vercel env pull`로 재검증했다. **교훈**: 이 프로젝트에서 PowerShell 파이프로 외부 서비스(CLI)에 값을 전달할 때는 항상 저장된 값을 다시 읽어 검증하고, 가능하면 Bash의 `printf`를 우선 사용할 것 — 특히 실제 서비스 키처럼 문자 하나만 틀려도 조용히 실패하는 값에서는 눈으로 보이지 않는 손상(BOM·개행)이 치명적이다.
 - **GitHub 자동 연동 실패를 원인 추적하지 않고 CLI 직접 배포로 우회(임시)**: `vercel link`가 GitHub 저장소 연결에 실패했지만, 이 세션의 1차 목표(아이폰에서 설치 가능한 URL 확보)에는 자동 배포 여부가 필수가 아니었다. 원인 조사에 시간을 쓰는 대신 `vercel --prod`로 즉시 배포하는 실용적 경로를 먼저 택하고 GitHub 연동은 TODO로 남겼다 — 바로 다음 요청("깃허브 TODO 진행")으로 마저 처리함(아래 참고).
 
+## 2026-07-05 (v0.8.2)
+
+### 변경 사항
+- **버그 수정 — 투자일기(거래·배당·메모)에 삭제 수단이 아예 없었음**: 사용자가 "수정하는게 안보임 삭제버튼이나"로 지적. `src/features/invest/api.ts`를 확인해보니 add/get만 있고 delete 함수 자체가 존재하지 않았음 — 성장 탭(`growth_records`/`milestones`)은 이미 삭제가 구현돼 있던 것과 비교되는 누락이었다. `deleteTrade`/`deleteDividend`/`deleteNote`(api.ts)와 `useDeleteTrade`/`useDeleteDividend`/`useDeleteNote`(useInvestQueries.ts)를 성장 탭과 동일한 패턴으로 추가하고, `InvestPage.tsx` 타임라인 각 행에 `X` 삭제 버튼을 달았다. 메모는 작성자 본인 것만(`author_id === userId`) 삭제 버튼이 보이고, 거래·배당은 가족 공용 데이터라 household 구성원 누구나 삭제 가능(기존 RLS `trades_all`/`dividends_all`이 이미 household 단위로 허용하고 있어 스키마 변경 없이 앱 레이어만 추가).
+
+### 의사결정 배경
+- **삭제만 추가하고 수정(edit) UI는 만들지 않음**: 사용자의 원문은 수정과 삭제 둘 다를 언급했지만, 이미 이 앱에는 "성장 탭은 삭제만 지원하고 수정 UI가 없다"는 선례가 있고 그 방식이 지금까지 문제로 지적된 적이 없었다. 투자 탭에도 같은 패턴(삭제 후 재작성)을 적용해 앱 전체의 일관성을 유지했다. 특히 `invest_notes` 테이블은 RLS에 `update` 정책이 아예 없어(select/insert/delete만 존재) 진짜 수정 기능을 만들려면 마이그레이션이 별도로 필요한 상태 — 지금 당장의 불편(삭제 자체가 안 됨)을 먼저 해소하는 쪽을 우선했고, 수정 UI가 정말 필요하면 그때 마이그레이션까지 포함해 다시 다루기로 함.
+- **거래·배당은 household 전체 삭제 허용, 메모만 작성자 제한**: 이미 마이그레이션에 반영된 기존 RLS 설계를 그대로 따랐을 뿐 새로 정책을 만들지 않았다 — 거래·배당은 "가족 공용 장부"라는 성격이라 배우자가 실수를 정정할 수 있어야 하고, 메모는 "개인 코멘트"에 가까워 diary의 댓글 삭제와 동일하게 본인 것만 지우게 하는 편이 일관적이다.
+
 ## 2026-07-05 (v0.8.1)
 
 ### 변경 사항
