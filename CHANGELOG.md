@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-07-05 (v0.8.0)
+
+### 변경 사항
+- **Vercel 프로덕션 배포**: "아이폰은 어떻게 설치?"라는 질문에서 출발 — 아이폰은 PWA만 설치 가능하고, PWA의 홈화면 추가·서비스워커 등록은 HTTPS로 실제 배포된 URL이 있어야 동작하므로 배포를 먼저 진행.
+  - `npx vercel link --yes --project baby-diary`로 Vercel 프로젝트 생성. GitHub 저장소 자동 연결은 실패했지만(권한 문제로 추정) CLI 직접 배포(`vercel --prod`)에는 지장 없어 그대로 진행.
+  - 프로덕션 환경변수 3개(`VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`/`VITE_USE_MOCK=false`) 등록 후 `npx vercel --prod --yes`로 배포 → https://baby-diary-tau.vercel.app.
+  - Playwright로 프로덕션 URL 직접 접속해 로그인 화면 렌더·콘솔 에러 0건·`manifest.webmanifest` 200·서비스워커 실제 등록을 확인.
+
+### 의사결정 배경
+- **PowerShell 파이프로 등록한 환경변수가 손상됨 — 원인과 대응**: `"value" | npx vercel env add NAME production` 방식으로 처음 등록했을 때 `vercel`이 "Value contains newlines" 경고를 냈다. 의심스러워 `vercel env pull`로 실제 저장된 값을 확인해보니 `VITE_SUPABASE_ANON_KEY`가 `"﻿sb_publishable_...\r\n"`처럼 **BOM(U+FEFF)이 앞에, 리터럴 CRLF가 뒤에 붙은 채로 저장**돼 있었다. Windows PowerShell이 파이프로 문자열을 흘려보낼 때 기본적으로 UTF-16LE+BOM, CRLF 개행으로 인코딩하기 때문 — 이 값 그대로였다면 Supabase anon key가 실제 키와 문자 단위로 달라 프로덕션에서 로그인 자체가 조용히 실패했을 것이다. 세 변수를 모두 삭제하고 Bash의 `printf '%s' "value"`(개행 없음, UTF-8, BOM 없음)로 재등록해 `vercel env pull`로 재검증했다. **교훈**: 이 프로젝트에서 PowerShell 파이프로 외부 서비스(CLI)에 값을 전달할 때는 항상 저장된 값을 다시 읽어 검증하고, 가능하면 Bash의 `printf`를 우선 사용할 것 — 특히 실제 서비스 키처럼 문자 하나만 틀려도 조용히 실패하는 값에서는 눈으로 보이지 않는 손상(BOM·개행)이 치명적이다.
+- **GitHub 자동 연동 실패를 원인 추적하지 않고 CLI 직접 배포로 우회**: `vercel link`가 GitHub 저장소 연결에 실패했지만, 이 세션의 목표(아이폰에서 설치 가능한 URL 확보)에는 자동 배포 여부가 필수가 아니었다. 원인 조사에 시간을 쓰는 대신 `vercel --prod`로 즉시 배포하는 실용적 경로를 택했고, GitHub 연동은 handoff.md TODO로 남겨 다음에 필요할 때(반복 배포 자동화가 중요해질 때) 다시 다루기로 함.
+
 ## 2026-07-05 (v0.7.1)
 
 ### 변경 사항

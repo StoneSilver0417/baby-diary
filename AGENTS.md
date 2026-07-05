@@ -5,7 +5,7 @@
 
 ## 개요
 - 한 줄 설명: 부부 2인 전용 비공개 아이 육아일기(하루 사진 3장 + 글, 댓글·좋아요) + 아이 주식계좌 투자일기(수동 기록) 앱.
-- 배포 URL: (미배포 — Vercel 정적 호스팅 예정)
+- 배포 URL: https://baby-diary-tau.vercel.app (Vercel, `waterdrop11s-projects/baby-diary`)
 
 ## 기술 스택
 - 프레임워크: React 19 + TypeScript + Vite (정적 SPA — Next.js SSR은 Capacitor로 못 감싸므로 금지)
