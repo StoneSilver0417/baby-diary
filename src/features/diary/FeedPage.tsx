@@ -7,7 +7,9 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { childAge } from '@/lib/childAge'
 import { Sun } from '@/assets/doodles'
-import { useChild, useFeed, useProfiles } from './useDiaryQueries'
+import { fabClassName } from '@/components/Fab'
+import { useMyProfile } from '@/features/shared/useHousehold'
+import { useChild, useFeed } from './useDiaryQueries'
 import { useNewBadge } from './useNewBadge'
 import { EntryPhotos } from './EntryPhotos'
 import { DiaryViewSegment } from './DiaryViewSegment'
@@ -15,9 +17,8 @@ import { DiaryViewSegment } from './DiaryViewSegment'
 export function FeedPage() {
   const { userId } = useAuth()
   const { data: child } = useChild()
-  const { data: profiles } = useProfiles()
   const { data: feed, isLoading } = useFeed()
-  const myProfile = profiles?.find((p) => p.id === userId)
+  const myProfile = useMyProfile()
   const { isNew } = useNewBadge(myProfile, feed)
 
   const age = childAge(child?.birth_date)
@@ -104,11 +105,7 @@ export function FeedPage() {
         )}
       </div>
 
-      <Link
-        to="/write"
-        className="bottom-fab fixed right-5 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg"
-        aria-label="일기 작성"
-      >
+      <Link to="/write" className={fabClassName} aria-label="일기 작성">
         <Plus className="size-6" />
       </Link>
     </div>

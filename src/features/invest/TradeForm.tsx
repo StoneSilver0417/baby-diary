@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import type { TradeSide } from '@/types/database'
-import { useHouseholdId } from '@/features/diary/useDiaryQueries'
+import { useHouseholdId } from '@/features/shared/useHousehold'
 import { useAddTrade } from './useInvestQueries'
 
 export function TradeForm({ childId, onDone }: { childId: string; onDone: () => void }) {

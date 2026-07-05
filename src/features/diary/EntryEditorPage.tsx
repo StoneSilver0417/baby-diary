@@ -4,7 +4,8 @@ import { format } from 'date-fns'
 import { toast } from 'sonner'
 import { X } from 'lucide-react'
 import { useAuth } from '@/features/auth/AuthProvider'
-import { useHouseholdId, usePhotoUrls, useProfiles } from '@/features/diary/useDiaryQueries'
+import { usePhotoUrls } from '@/features/diary/useDiaryQueries'
+import { useHouseholdId, useMyProfile } from '@/features/shared/useHousehold'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
@@ -17,7 +18,7 @@ const MAX_PHOTOS = 3
 
 export function EntryEditorPage() {
   const { userId } = useAuth()
-  const { data: profiles } = useProfiles()
+  const myProfile = useMyProfile()
   const householdId = useHouseholdId()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -78,7 +79,6 @@ export function EntryEditorPage() {
 
   async function handleSubmit() {
     if (!userId || !householdId) return
-    const myProfile = profiles?.find((p) => p.id === userId)
     if (!content.trim()) {
       toast.error('내용을 입력해 주세요.')
       return

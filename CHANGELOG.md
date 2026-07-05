@@ -1,5 +1,36 @@
 # Changelog
 
+## 2026-07-05 (v0.9.0)
+
+### 변경 사항 — 보안·과금 방어 점검 + 전체 리팩토링
+전체 코드·마이그레이션·인프라 설정을 전수 점검한 결과를 반영.
+
+**점검 결과: 이미 안전했던 것 (조치 불필요)**
+- RLS 13개 테이블 전부 활성 + household 격리, Storage household 폴더 격리, 회원가입 비활성화, XSS 벡터 0건(`dangerouslySetInnerHTML`/`eval` 없음), service_role 키 미사용, 시크릿 커밋 없음.
+- **"비정상 요청 시 과금" 위험은 구조적으로 없음**: Supabase 무료 조직·Vercel Hobby 모두 결제수단 미등록 하드캡 플랜 — 한도 초과 시 과금이 아니라 서비스 일시정지. 리스크는 돈이 아니라 "정지"이므로 아래 조치들은 남용으로 한도를 잠식당하는 표면을 줄이는 것.
+
+**신규 조치**
+- `supabase/migrations/0003_hardening.sql` (SQL Editor 수동 적용 필요):
+  1. photos 버킷 `file_size_limit 3MB` + `allowed_mime_types` 이미지 3종 — 클라이언트 압축(1600px WebP)을 우회한 대용량 직접 업로드로 무료 1GB 스토리지를 잠식하는 경로 차단.
+  2. 전 텍스트 컬럼 길이 CHECK(일기 1만자·댓글 1천자·메모 500자 등) — 초대형 텍스트로 DB(500MB) 잠식 차단.
+  3. **profiles.household_id 변경 금지 트리거** — `profiles_update_own` RLS가 본인 행 여부만 검사하고 household_id 값 변경은 막지 않아, 타 가족 UUID를 알아내면 자기 소속을 바꿔 그 가족 데이터에 합류할 수 있는 멀티테넌트 격리 우회 구멍이 있었음(이번 점검의 가장 중요한 발견).
+  4. children household당 5명 제한 트리거.
+- `vercel.json` 보안 헤더: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy`, `X-Robots-Tag: noindex` + `index.html`에 robots noindex 메타(비공개 가족앱 검색엔진 색인 차단).
+- 사진 서명 URL TTL 7일 → **24시간** 단축(유출 시 노출 창 축소), `usePhotoUrls` 캐시도 stale 12h/gc 24h로 연동 조정.
+
+**리팩토링 (동작 불변)**
+- `src/features/shared/useHousehold.ts` 신설: `useHouseholdId()` 이동 + `useMyProfile()` 신설 — diary 피처에 있던 훅을 invest/growth/settings 7개 파일이 가져다 쓰던 구조와, `profiles?.find(p => p.id === userId)` 중복 3곳을 정리.
+- `src/components/Fab.tsx` 신설: 3개 화면에 중복되던 플로팅 추가 버튼 마크업 통합.
+- `mapRawEntry`의 `any` 제거 — 조인 응답 타입 `RawEntryRow` 명시.
+- `SettingsPage` 저장 함수에 catch + 에러 토스트 추가(기존엔 실패해도 아무 안내 없음).
+- **라우트 lazy loading**: 캘린더/앨범/검색/성장/투자/설정을 `React.lazy`로 분리(`Suspense` fallback은 기존 `SplashScreen` 재사용) — 메인 번들 665KB→343KB(gzip 191→107KB), 초기 로드와 무료 전송량 모두 절약.
+
+### 의사결정 배경
+- **CSP(Content-Security-Policy)는 의도적으로 제외**: XSS 벡터가 이미 없고(React 이스케이프, 위험 API 미사용), Vite 번들·서비스워커·Supabase 연결을 정확히 허용하는 CSP를 잘못 쓰면 앱이 통째로 깨진다. 방어 이득 대비 리스크가 커서 기본 헤더 4종+noindex만 적용 — 필요해지면 report-only 모드로 단계 도입.
+- **profiles.household_id 방어를 RLS with check가 아닌 트리거로**: with check 안에서 `my_household_id()`를 부르면 함수가 profiles 자신을 읽는 자기참조가 되어 UPDATE 중 평가 시점이 미묘해짐 — `old`/`new`를 직접 비교하는 BEFORE UPDATE 트리거가 의미가 명확하고 확실함.
+- **서명 URL TTL을 1시간이 아닌 24시간으로**: 더 짧을수록 안전하지만 React Query 캐시 만료 주기가 짧아져 서명 API 호출이 늘고, 캐시된 만료 URL로 이미지가 깨지는 창이 생김. 가족 전용 앱의 위협 모델(URL을 가족이 실수로 외부 공유)에서는 24h가 보안·UX 균형점.
+- **mock 분기 구조는 리팩토링하지 않음**: api.ts마다 반복되는 `if (useMock)` 분기는 중복이지만 AGENTS.md에 문서화된 의도적 패턴이고, 추상화하면 mock/실제 경로가 한눈에 안 보이게 됨 — 유지.
+
 ## 2026-07-05 (v0.8.0)
 
 ### 변경 사항

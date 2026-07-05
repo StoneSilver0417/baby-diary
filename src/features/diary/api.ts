@@ -1,7 +1,21 @@
 import { supabase, useMock } from '@/lib/supabase'
 import { mockState } from '@/lib/mockDb'
 import { compressImage } from '@/lib/image'
-import type { Child, Comment, DiaryEntry, Profile } from '@/types/database'
+import type { Child, Comment, DiaryEntry, DiaryPhoto, Profile } from '@/types/database'
+
+/** diary_entries에 profiles·diary_photos·comments·likes를 임베드한 조인 응답 행 */
+type RawEntryRow = {
+  id: string
+  household_id: string
+  author_id: string
+  entry_date: string
+  content: string
+  created_at: string
+  profiles: { display_name: string } | null
+  diary_photos: DiaryPhoto[] | null
+  comments: Comment[] | null
+  likes: { author_id: string }[] | null
+}
 
 const delay = (ms = 150) => new Promise((r) => setTimeout(r, ms))
 
@@ -271,15 +285,16 @@ export async function updateLastSeen(userId: string, at: string): Promise<void> 
 
 export async function getSignedPhotoUrl(path: string): Promise<string> {
   if (useMock) return path // mock에서는 object URL을 그대로 storage_path에 저장
+  // TTL 24시간 — URL이 외부로 새어도 유효 기간을 하루로 제한 (usePhotoUrls 캐시와 연동)
   const { data, error } = await supabase.storage
     .from('photos')
-    .createSignedUrl(path, 60 * 60 * 24 * 7)
+    .createSignedUrl(path, 60 * 60 * 24)
   if (error) throw error
   return data.signedUrl
 }
 
-// biome-ignore lint: 실제 Supabase 조인 결과를 DiaryEntry 형태로 정규화
-function mapRawEntry(raw: any): DiaryEntry {
+/** 실제 Supabase 조인 결과를 DiaryEntry 형태로 정규화 */
+function mapRawEntry(raw: RawEntryRow): DiaryEntry {
   return {
     id: raw.id,
     household_id: raw.household_id,
@@ -289,7 +304,7 @@ function mapRawEntry(raw: any): DiaryEntry {
     created_at: raw.created_at,
     photos: raw.diary_photos ?? [],
     comments: raw.comments ?? [],
-    likedBy: (raw.likes ?? []).map((l: { author_id: string }) => l.author_id),
+    likedBy: (raw.likes ?? []).map((l) => l.author_id),
     authorName: raw.profiles?.display_name ?? '',
   }
 }

@@ -1,6 +1,5 @@
 import { useQuery, useQueries } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/queryClient'
-import { useAuth } from '@/features/auth/AuthProvider'
 import { getChild, getEntry, getFeed, getProfiles, getSignedPhotoUrl } from './api'
 
 export function useChild() {
@@ -9,13 +8,6 @@ export function useChild() {
 
 export function useProfiles() {
   return useQuery({ queryKey: ['profiles'], queryFn: getProfiles })
-}
-
-/** 현재 로그인 사용자가 속한 household id (쓰기 시 데이터 격리에 필요) */
-export function useHouseholdId(): string | undefined {
-  const { userId } = useAuth()
-  const { data: profiles } = useProfiles()
-  return profiles?.find((p) => p.id === userId)?.household_id
 }
 
 export function useFeed() {
@@ -35,8 +27,9 @@ export function usePhotoUrls(paths: string[]) {
     queries: paths.map((path) => ({
       queryKey: queryKeys.photoUrl(path),
       queryFn: () => getSignedPhotoUrl(path),
-      staleTime: 6 * 24 * 60 * 60 * 1000,
-      gcTime: 7 * 24 * 60 * 60 * 1000,
+      // 서명 URL TTL(24h)보다 짧게 유지해 만료된 URL을 캐시에서 내주지 않도록 함
+      staleTime: 12 * 60 * 60 * 1000,
+      gcTime: 24 * 60 * 60 * 1000,
     })),
   })
 }

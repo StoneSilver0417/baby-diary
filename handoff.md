@@ -2,13 +2,17 @@
 
 ## 현재 상태
 
-- **버전**: v0.8.2 (투자일기 삭제 기능 추가)
-- **빌드 상태**: `npx tsc --noEmit` 통과, `npm run build` 통과, 안드로이드 `gradlew.bat assembleDebug` 통과
+- **버전**: v0.9.0 (보안·과금 방어 점검 + 전체 리팩토링)
+- **빌드 상태**: `npx tsc --noEmit` 통과, `npm run build` 통과 (라우트 lazy loading으로 메인 번들 665KB→343KB, gzip 107KB)
 - **배포 상태**: **웹 배포 완료** — https://baby-diary-tau.vercel.app (Vercel 프로젝트 `waterdrop11s-projects/baby-diary`). 안드로이드는 디버그 APK 로컬 생성까지(Play Store 미배포).
 - **실행 방법/URL**: 웹은 위 URL로 바로 접속(아이폰은 Safari로 열어 공유 버튼 → "홈 화면에 추가"로 PWA 설치). 로컬 개발은 `npm run dev` → `.env.local`에 실제 Supabase URL/anon key 설정됨(`VITE_USE_MOCK=false`). 로그인 계정은 부부가 대시보드에서 만든 실제 이메일(별도 기록 필요 — 이 저장소엔 없음).
 
 ## 최근 작업
 
+- **보안·과금 방어 점검 + 전체 리팩토링 (v0.9.0)**: 코드·마이그레이션·인프라 전수 점검. 핵심 결론: **무료 플랜(Supabase 무료 조직 + Vercel Hobby)은 결제수단 미등록 하드캡이라 비정상 요청이 와도 과금은 구조적으로 불가능** — 리스크는 한도 잠식으로 인한 서비스 정지이며, 그 표면을 줄이는 조치를 반영.
+  - **⚠️ 미적용: `supabase/migrations/0003_hardening.sql`을 SQL Editor에서 실행해야 함** — 버킷 3MB·이미지 MIME 제한, 텍스트 길이 CHECK, profiles.household_id 변경 금지 트리거(멀티테넌트 격리 우회 구멍 차단 — 이번 점검 최대 발견), children 5명 제한.
+  - vercel.json 보안 헤더 5종 + noindex, 서명 URL TTL 7일→24h.
+  - 리팩토링: `features/shared/useHousehold.ts`(useHouseholdId/useMyProfile 공용화), `components/Fab.tsx`(FAB 중복 제거), `mapRawEntry` any 제거, SettingsPage 에러 토스트, 라우트 lazy loading(메인 번들 절반 축소). 전 탭 Playwright 스모크 통과(콘솔 에러 0).
 - **버그 수정 — 투자일기에 수정·삭제 수단이 전혀 없었음**: 사용자가 "수정하는게 안보임 삭제버튼이나"로 지적. 확인해보니 `src/features/invest/api.ts`에는 거래(trades)·배당(dividends)·메모(invest_notes) 모두 추가(add)/조회(get)만 있고 삭제 함수 자체가 없었음(성장 탭은 이미 삭제가 있던 것과 대조적). RLS는 이미 삭제를 허용하고 있어(`trades_all`/`dividends_all`은 household 전체, `invest_notes_delete_own`은 작성자 본인만) 스키마 변경 없이 앱 레이어만 추가하면 됐음.
   - `deleteTrade`/`deleteDividend`/`deleteNote`를 `api.ts`에, `useDeleteTrade`/`useDeleteDividend`/`useDeleteNote`를 `useInvestQueries.ts`에 추가(성장 탭의 `useDeleteGrowthRecord`와 동일 패턴).
   - `InvestPage.tsx` 타임라인 각 항목에 `X` 삭제 버튼 추가 — 메모는 본인 글에만 노출(`author_id === userId`), 거래·배당은 household 전체가 삭제 가능(성장 기록과 동일하게 부부 공용 데이터라는 전제).
@@ -34,6 +38,7 @@
 
 ## 다음 TODO
 
+0. [ ] **`supabase/migrations/0003_hardening.sql`을 SQL Editor에서 실행** (보안 하드닝 — 실행 전까지 버킷 크기 제한·격리 우회 방어 미적용 상태)
 1. [ ] 아이폰 Safari에서 https://baby-diary-tau.vercel.app 접속 → 홈 화면에 추가 → PWA 설치·로그인·사용 전체 플로우 실기기 검증
 2. [ ] 안드로이드 실기기에 새 APK(`android/app/build/outputs/apk/debug/app-debug.apk`) 재설치 → FAB 잘림 해결 확인 + 전체 플로우 검증
 3. [ ] (지인 확장 시) 가입 → 가족 생성/초대코드로 배우자 합류 온보딩 화면. 스키마·RLS는 이미 멀티테넌트라 앱 온보딩 UI만 추가하면 됨. 무료 플랜은 2~3가족까지 여유, 5가족 이상 활발하면 스토리지 1GB·전송 5GB 압박 → Pro($25/월) 또는 이미지 압축 강화.

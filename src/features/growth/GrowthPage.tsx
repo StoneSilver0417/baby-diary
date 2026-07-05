@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { differenceInCalendarDays, format } from 'date-fns'
-import { Plus, X } from 'lucide-react'
+import { X } from 'lucide-react'
+import { Fab } from '@/components/Fab'
 import {
   Sheet,
   SheetContent,
@@ -138,13 +139,7 @@ export function GrowthPage() {
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetTrigger asChild>
-          <button
-            type="button"
-            className="bottom-fab fixed right-5 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg"
-            aria-label={tab === 'records' ? '성장 기록 추가' : '마일스톤 추가'}
-          >
-            <Plus className="size-6" />
-          </button>
+          <Fab aria-label={tab === 'records' ? '성장 기록 추가' : '마일스톤 추가'} />
         </SheetTrigger>
         <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto">
           <SheetHeader>

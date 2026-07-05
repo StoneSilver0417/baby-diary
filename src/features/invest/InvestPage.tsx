@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { format } from 'date-fns'
-import { Plus, X } from 'lucide-react'
+import { X } from 'lucide-react'
+import { Fab } from '@/components/Fab'
 import {
   Sheet,
   SheetContent,
@@ -13,7 +14,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuth } from '@/features/auth/AuthProvider'
-import { useChild, useHouseholdId, useProfiles } from '@/features/diary/useDiaryQueries'
+import { useChild, useProfiles } from '@/features/diary/useDiaryQueries'
+import { useHouseholdId } from '@/features/shared/useHousehold'
 import { cn } from '@/lib/utils'
 import { computeHoldings, enrichHoldings, type EnrichedHolding } from './holdings'
 import { computeYearlySummary } from './summary'
@@ -199,13 +201,7 @@ export function InvestPage() {
       {/* 추가 시트 */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetTrigger asChild>
-          <button
-            type="button"
-            className="bottom-fab fixed right-5 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg"
-            aria-label="거래·배당·메모 추가"
-          >
-            <Plus className="size-6" />
-          </button>
+          <Fab aria-label="거래·배당·메모 추가" />
         </SheetTrigger>
         <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto">
           <SheetHeader>

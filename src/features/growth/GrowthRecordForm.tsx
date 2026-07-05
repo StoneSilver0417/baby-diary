@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { useHouseholdId } from '@/features/diary/useDiaryQueries'
+import { useHouseholdId } from '@/features/shared/useHousehold'
 import { useUpsertGrowthRecord } from './useGrowthQueries'
 
 export function GrowthRecordForm({ childId, onDone }: { childId: string; onDone: () => void }) {

@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useAuth } from '@/features/auth/AuthProvider'
-import { useChild, useProfiles } from '@/features/diary/useDiaryQueries'
+import { useChild } from '@/features/diary/useDiaryQueries'
+import { useMyProfile } from '@/features/shared/useHousehold'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -13,8 +14,7 @@ export function SettingsPage() {
   const { userId, signOut } = useAuth()
   const queryClient = useQueryClient()
   const { data: child } = useChild()
-  const { data: profiles } = useProfiles()
-  const myProfile = profiles?.find((p) => p.id === userId)
+  const myProfile = useMyProfile()
 
   const [childName, setChildName] = useState('')
   const [birthDate, setBirthDate] = useState('')
@@ -39,6 +39,8 @@ export function SettingsPage() {
       await updateChild(child.id, { name: childName, birth_date: birthDate })
       await queryClient.invalidateQueries({ queryKey: ['child'] })
       toast.success('저장했어요.')
+    } catch {
+      toast.error('저장에 실패했어요. 잠시 후 다시 시도해 주세요.')
     } finally {
       setSaving(false)
     }
@@ -51,6 +53,8 @@ export function SettingsPage() {
       await updateDisplayName(userId, displayName)
       await queryClient.invalidateQueries({ queryKey: ['profiles'] })
       toast.success('저장했어요.')
+    } catch {
+      toast.error('저장에 실패했어요. 잠시 후 다시 시도해 주세요.')
     } finally {
       setSaving(false)
     }
