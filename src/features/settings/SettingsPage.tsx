@@ -200,6 +200,11 @@ function AddChildRow({
 
 function InviteSection() {
   const { data: profiles } = useProfiles()
+  const householdId = useHouseholdId()
+  // profiles 테이블 select 정책이 관리자에게는 전체 가족을 열어주므로(관리자 대시보드용),
+  // 여기서는 반드시 내 household로만 걸러서 보여준다 — 아니면 관리자 계정에서
+  // 시스템 전체 구성원이 "우리 가족"으로 보이는 정보 노출 버그가 된다.
+  const householdMembers = profiles?.filter((p) => p.household_id === householdId)
   const [invite, setInvite] = useState<Invite | null>(null)
   const [creating, setCreating] = useState(false)
 
@@ -225,7 +230,7 @@ function InviteSection() {
     <section className="space-y-3">
       <h2 className="text-sm font-medium text-muted-foreground">가족 구성원</h2>
       <div className="space-y-1 text-sm text-foreground">
-        {profiles?.map((p) => <div key={p.id}>{p.display_name}</div>)}
+        {householdMembers?.map((p) => <div key={p.id}>{p.display_name}</div>)}
       </div>
       {invite ? (
         <div className="rounded-lg border border-border p-3 text-center">
