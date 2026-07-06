@@ -14,16 +14,24 @@ import {
   upsertPrice,
 } from './api'
 
-export function useTrades() {
-  return useQuery({ queryKey: [...queryKeys.invest.timeline, 'trades'], queryFn: getTrades })
+export function useTrades(childId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.invest.trades(childId ?? ''),
+    queryFn: () => getTrades(childId!),
+    enabled: !!childId,
+  })
 }
 
 export function useNotes() {
-  return useQuery({ queryKey: [...queryKeys.invest.timeline, 'notes'], queryFn: getNotes })
+  return useQuery({ queryKey: queryKeys.invest.notes, queryFn: getNotes })
 }
 
-export function useDividends() {
-  return useQuery({ queryKey: [...queryKeys.invest.timeline, 'dividends'], queryFn: getDividends })
+export function useDividends(childId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.invest.dividends(childId ?? ''),
+    queryFn: () => getDividends(childId!),
+    enabled: !!childId,
+  })
 }
 
 export function usePrices() {
@@ -34,7 +42,7 @@ export function useAddDividend() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: addDividend,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.invest.timeline }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['invest', 'dividends'] }),
   })
 }
 
@@ -42,7 +50,7 @@ export function useDeleteDividend() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: deleteDividend,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.invest.timeline }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['invest', 'dividends'] }),
   })
 }
 
@@ -66,7 +74,7 @@ export function useAddTrade() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: addTrade,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.invest.timeline }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['invest', 'trades'] }),
   })
 }
 
@@ -74,7 +82,7 @@ export function useDeleteTrade() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: deleteTrade,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.invest.timeline }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['invest', 'trades'] }),
   })
 }
 
@@ -82,7 +90,7 @@ export function useAddNote() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: addNote,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.invest.timeline }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.invest.notes }),
   })
 }
 
@@ -90,6 +98,6 @@ export function useDeleteNote() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: deleteNote,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.invest.timeline }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.invest.notes }),
   })
 }

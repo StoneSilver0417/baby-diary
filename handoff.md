@@ -2,54 +2,39 @@
 
 ## 현재 상태
 
-- **버전**: v0.9.2 (뒤로가기 재수정 + 줄노트·자간 시각 보정)
-- **빌드 상태**: `npx tsc --noEmit` 통과, `npm run build` 통과 (라우트 lazy loading으로 메인 번들 665KB→343KB, gzip 107KB)
-- **배포 상태**: **웹 배포 완료** — https://baby-diary-tau.vercel.app (Vercel 프로젝트 `waterdrop11s-projects/baby-diary`). 안드로이드는 디버그 APK를 **GitHub Release**로 배포(Play Store 미배포).
-- **실행 방법/URL**: 웹은 위 URL로 바로 접속(아이폰은 Safari로 열어 공유 버튼 → "홈 화면에 추가"로 PWA 설치). 안드로이드는 https://github.com/StoneSilver0417/baby-diary/releases/tag/android-latest 에서 GitHub 로그인 상태로 `app-debug.apk` 다운로드 후 설치(덮어 설치). 로컬 개발은 `npm run dev` → `.env.local`에 실제 Supabase URL/anon key 설정됨(`VITE_USE_MOCK=false`). 로그인 계정은 부부가 대시보드에서 만든 실제 이메일(별도 기록 필요 — 이 저장소엔 없음).
+- **버전**: v0.10.1 (공개 회원가입·배우자 초대·다자녀·문의/관리자 + 앱 아이콘 교체)
+- **빌드 상태**: `npx tsc --noEmit` 통과, `npm run build` 통과. 안드로이드 디버그 APK 재빌드 및 GitHub Release(`android-latest`) 업로드 완료(새 아이콘 반영).
+- **배포 상태**: 웹은 GitHub push 시 Vercel 자동 배포(https://baby-diary-tau.vercel.app), 안드로이드는 GitHub Release APK. **단, v0.10.0 기능은 DB 마이그레이션(0004) 미실행 + 대시보드 설정 미변경 상태라 실제로는 아직 동작하지 않음** — 아래 "다음 TODO" #0, #1 먼저 처리 필요.
+- **실행 방법/URL**: 웹 https://baby-diary-tau.vercel.app / 안드로이드 https://github.com/StoneSilver0417/baby-diary/releases/tag/android-latest / 로컬 `npm run dev`(`.env.local`의 `VITE_USE_MOCK=false`, 실 Supabase 연결).
 
 ## 최근 작업
 
-- **뒤로가기 재수정 + 줄노트·자간 시각 보정 (v0.9.2)**: 사용자가 v0.9.1 뒤로가기 수정을 실기기에서 확인 후 재지적 — "이전에 갔던 탭들을 왔다갔다 하네".
-  - **원인**: `window.history.back()`이 브라우저 히스토리를 그대로 따라가다 보니, 지금까지 눌렀던 탭 전환(일기→성장→투자 등)까지 전부 히스토리 항목으로 쌓여 그 순서대로 되짚어가고 있었음. `src/lib/useAndroidBackButton.ts`를 히스토리 추적 대신 **고정 규칙**으로 교체: 현재 경로가 `/`(피드)가 아니면 무조건 `/`로 이동, `/`면 앱 종료. 탭을 아무리 옮겨다녀도 뒤로가기 한 번이면 항상 피드로 돌아가고, 피드에서 한 번 더 누르면 종료됨(안드로이드 바텀내비 표준 패턴). 실기기 재검증 필요.
-  - **줄노트 줄이 텍스트 기준선과 안 맞고 손글씨 자간이 좁아 붙어 보임**: `paper-lines` 유틸의 `background-position` 오프셋(0.4rem→0rem)을 조정해 각 줄 텍스트 바로 아래에 밑줄이 오도록 정렬. `.font-hand`에 `letter-spacing: 0.02em` 추가로 Hi Melody 특유의 좁은 자간을 살짝 벌림. Playwright 스크린샷으로 전/후 비교 확인(피드·상세·작성 화면 모두).
-  - 안드로이드 APK 재빌드 → GitHub Release(`android-latest`) 갱신, 웹은 자동 배포.
-- **모바일 UX 버그 3건 수정 (v0.9.1)**: 사용자가 실기기에서 지적.
-  1. **마일스톤 등 하단 시트 저장 버튼이 기기 하단 버튼과 겹침**: `SheetContent`의 `side="bottom"` 변형에 `pb-safe` 누락 — Radix Dialog가 최상위 포털이라 AppShell의 안전영역 처리를 안 받음. `src/components/ui/sheet.tsx`에 `pb-safe` 추가로 모든 하단 시트(투자·성장 폼 전부)에 일괄 적용.
-  2. **일기 상세에서 안드로이드 뒤로가기를 누르면 인앱 이동 대신 앱이 최소화됨**: `@capacitor/app` 플러그인이 아예 설치돼 있지 않아, 뒤로가기 버튼에 대한 리스너가 없어 기본 동작(앱 종료)만 발생하던 문제. `@capacitor/app` 설치 + `src/lib/useAndroidBackButton.ts` 신규(네이티브 플랫폼에서만 `backButton` 이벤트 구독, `canGoBack`이면 `history.back()`, 아니면(=메인) `App.exitApp()`) → `App.tsx`에 마운트. **실기기 재검증 필요**(Playwright로는 하드웨어 뒤로가기 재현 불가).
-  3. **사진 넘기기가 탭 전용이라 인스타처럼 스와이프가 안 됨**: `src/components/PhotoCarousel.tsx`를 포인터 이벤트 기반 드래그로 재작성 — 드래그 중 실시간 translateX 추종, 50px 임계값 넘으면 다음/이전 장으로 스냅, 놓으면 300ms 트랜지션. Playwright로 드래그 시뮬레이션해 인덱스 전환·점 표시기 갱신 확인.
-  - 웹 스모크(mock)로 1·3번 확인(콘솔 에러 0), 안드로이드 APK 재빌드 후 GitHub Release(`android-latest`) 갱신 완료 — 2번은 실기기에서 최종 확인 필요.
-- **보안·과금 방어 점검 + 전체 리팩토링 (v0.9.0)**: 코드·마이그레이션·인프라 전수 점검. 핵심 결론: **무료 플랜(Supabase 무료 조직 + Vercel Hobby)은 결제수단 미등록 하드캡이라 비정상 요청이 와도 과금은 구조적으로 불가능** — 리스크는 한도 잠식으로 인한 서비스 정지이며, 그 표면을 줄이는 조치를 반영.
-  - **⚠️ 미적용: `supabase/migrations/0003_hardening.sql`을 SQL Editor에서 실행해야 함** — 버킷 3MB·이미지 MIME 제한, 텍스트 길이 CHECK, profiles.household_id 변경 금지 트리거(멀티테넌트 격리 우회 구멍 차단 — 이번 점검 최대 발견), children 5명 제한.
-  - vercel.json 보안 헤더 5종 + noindex, 서명 URL TTL 7일→24h.
-  - 리팩토링: `features/shared/useHousehold.ts`(useHouseholdId/useMyProfile 공용화), `components/Fab.tsx`(FAB 중복 제거), `mapRawEntry` any 제거, SettingsPage 에러 토스트, 라우트 lazy loading(메인 번들 절반 축소). 전 탭 Playwright 스모크 통과(콘솔 에러 0).
-- **버그 수정 — 투자일기에 수정·삭제 수단이 전혀 없었음**: 사용자가 "수정하는게 안보임 삭제버튼이나"로 지적. 확인해보니 `src/features/invest/api.ts`에는 거래(trades)·배당(dividends)·메모(invest_notes) 모두 추가(add)/조회(get)만 있고 삭제 함수 자체가 없었음(성장 탭은 이미 삭제가 있던 것과 대조적). RLS는 이미 삭제를 허용하고 있어(`trades_all`/`dividends_all`은 household 전체, `invest_notes_delete_own`은 작성자 본인만) 스키마 변경 없이 앱 레이어만 추가하면 됐음.
-  - `deleteTrade`/`deleteDividend`/`deleteNote`를 `api.ts`에, `useDeleteTrade`/`useDeleteDividend`/`useDeleteNote`를 `useInvestQueries.ts`에 추가(성장 탭의 `useDeleteGrowthRecord`와 동일 패턴).
-  - `InvestPage.tsx` 타임라인 각 항목에 `X` 삭제 버튼 추가 — 메모는 본인 글에만 노출(`author_id === userId`), 거래·배당은 household 전체가 삭제 가능(성장 기록과 동일하게 부부 공용 데이터라는 전제).
-  - **수정(edit) 기능은 이번에 추가하지 않음** — 성장 탭도 삭제만 지원하고(수정 UI 없음) 그 패턴이 이미 이 앱에서 받아들여지고 있어 일관성을 위해 동일하게 삭제 후 재작성 방식으로 맞춤. `invest_notes` 테이블은 RLS에 update 정책 자체가 없어 진짜 수정 UI를 만들려면 마이그레이션이 추가로 필요함 — 필요하면 별도로 요청.
-  - Playwright(mock 모드)로 배당 삭제 확인: 항목이 사라지고 연도별 요약(배당 합계)도 즉시 갱신됨. 콘솔 에러 0건.
-- **Vercel 프로덕션 배포 + GitHub 자동 배포 연동**: 사용자가 "아이폰은 어떻게 설치?"라고 물어본 데서 시작 — 아이폰은 PWA만 가능하고 PWA는 HTTPS로 배포된 URL이 있어야 홈화면 추가·서비스워커가 동작하므로 배포를 진행.
-  - `npx vercel link --yes --project baby-diary`로 프로젝트 생성.
-  - 프로덕션 환경변수 3개 등록(`VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`/`VITE_USE_MOCK=false`).
-  - **PowerShell 파이프(`"value" | npx vercel env add ...`)가 값에 BOM(U+FEFF)과 CRLF를 섞어 넣는 버그 발견** — `vercel env pull`로 값을 직접 확인해 잡아냄. 세 변수를 전부 삭제 후 Bash의 `printf '%s' "value" | npx vercel env add ...`로 재등록해 깨끗한 값(BOM·개행 없음)으로 교체 확인.
-  - `npx vercel --prod --yes`로 배포 성공 → https://baby-diary-tau.vercel.app 발급. Playwright로 실제 프로덕션 URL에 접속해 로그인 화면 정상 렌더(콘솔 에러 0건), `manifest.webmanifest` 200 응답, 서비스워커 실제 등록 확인.
-  - **GitHub 자동 배포 연동**: 처음엔 `vercel link`의 GitHub 자동 연결이 실패했으나, 사용자가 Vercel 대시보드(Project Settings → Git → Connect Git Repository)에서 GitHub 앱 권한을 직접 승인 → `npx vercel git connect`로 "already connected" 확인. 로컬에만 있던 커밋 5개를 `git push`해 실제로 자동 배포가 트리거되는지 검증(23초 만에 새 Production 배포 생성·Ready 확인, `baby-diary-tau.vercel.app` alias도 정상 갱신). 이제 `master`에 push만 하면 자동 배포됨.
-- **(v0.7.1) 버그 수정 — 실기기 FAB 잘림**: 사용자가 안드로이드 실기기에서 발견. 하단 탭바가 `pb-safe`로 기기별 제스처 내비 안전영역만큼 커지는데 FAB는 `bottom-24` 고정값이라 겹쳐 잘림 — `pb-nav`/`bottom-fab` 유틸로 안전영역을 계산에 포함해 수정, APK 재빌드 후 재전달.
-- **(v0.7.0) Capacitor 8 Android 추가**: 디버그 APK 빌드. 상세는 CHANGELOG 참고.
+- **앱 아이콘 교체 (v0.10.1)**: 사용자가 제공한 새 아이콘(육아일기장+아기 얼굴+곰인형 일러스트)으로 교체. `src/assets/app-icon.png`을 새 마스터로, `scripts/generate-icons.mjs`를 PNG 리사이즈 방식으로 전환(기존 SVG 삭제). 웹 아이콘·파비콘·PWA 마스커블 아이콘·Capacitor 안드로이드 mipmap/스플래시 전체 재생성 후 APK 재빌드·GitHub Release 갱신 완료.
+- **공개 회원가입·배우자 초대·다자녀·관리자 문의 (v0.10.0)**: 사용자 요청 "회원가입 후 배우자초대 및 자녀둘이상일때 분기, 관리자에게 문의, 관리자페이지 별도 구성"을 전부 구현. 상세는 CHANGELOG 참고. 핵심 요약:
+  - **마이그레이션 `supabase/migrations/0004_signup_multichild_admin.sql`(신규, ⚠️ 미적용)**: 가족 생성/초대합류 RPC(`create_household_with_child`/`create_invite`/`join_household`), `diary_entries.child_id`, `admins`/`is_admin()`, `inquiries`, `admin_stats()`.
+  - 가입(`AuthProvider.signUp`, `LoginPage` 로그인/가입 토글) + 온보딩(`src/features/onboarding/`, `OnboardingGate`).
+  - 다자녀(`SelectedChildProvider`, `ChildSwitcher`, 성장·투자 쿼리 childId 필터, 설정 탭 아이별 수정+추가).
+  - 일기 대상 선택(아이 2명 이상일 때만 "모두/아이별" 세그먼트, 피드·상세 뱃지).
+  - 문의(설정 탭 등록+내역) + 관리자 페이지(`/admin`, `src/features/admin/`, `admin_stats` 대시보드 + 문의 답변).
+  - Playwright(mock, 아이 2명 시드)로 다자녀·일기대상·설정 UI 스모크 통과(콘솔 에러 0). 가입·온보딩·초대·문의·관리자는 mock 미지원(Auth/RPC/RLS 상호작용이라 mock으로 검증 불가 — 각 함수가 명시적 에러를 던짐).
 
 ## 알려진 이슈
 
-- **부부 실제 로그인 정보(이메일/비밀번호)는 이 문서에 없음** — 보안상 기록하지 않음. 대시보드 Authentication → Users에서 UID로 계정 관리 가능.
-- 안드로이드 실기기 재검증 필요: FAB 잘림 수정 반영 APK를 아직 실기기에서 재확인하지 못함.
+- **⚠️ `supabase/migrations/0004_signup_multichild_admin.sql` 미적용** — 실행 전까지 가입 자체는 되지만 온보딩 RPC·초대·문의·관리자 기능이 전부 404/에러로 실패한다.
+- **⚠️ Supabase 대시보드 설정 미변경** — Authentication → Sign In / Providers → Email에서 "Allow new users to sign up" ON, "Confirm email" OFF 필요. 지금은 회원가입 자체가 막혀 있을 수 있음.
+- 위 두 가지 모두 실 Supabase에서 종단 검증(가입→온보딩→초대→다자녀→일기대상→문의/관리자) 안 됨 — mock 스모크만 완료.
+- 부부 실제 로그인 정보(이메일/비밀번호)는 이 문서에 기록하지 않음.
+- 안드로이드 실기기 재검증 필요: 이전 라운드(뒤로가기 고정 규칙, 시트 안전영역, 사진 스와이프)에 더해 이번 다자녀 스위처·일기 대상 선택도 실기기 미확인.
 - Release 서명 키스토어는 아직 없음(debug 빌드까지만).
 - `src/types/database.ts`는 여전히 수동 작성 타입(gen-types 미적용).
-- 투자일기 거래·배당·메모는 삭제만 가능, 수정(edit) UI는 없음(성장 탭과 동일한 의도된 범위). 메모 수정까지 필요해지면 `invest_notes`에 update RLS 정책 추가부터 필요.
+- 투자일기 거래·배당·메모는 삭제만 가능, 수정(edit) UI는 없음(의도된 범위).
 - claude.ai/design 연동, Cloudflare R2 사진 분리는 보류 상태(설계만 `docs/r2-photo-plan.md`에 보존).
 
 ## 다음 TODO
 
-0. [ ] **`supabase/migrations/0003_hardening.sql`을 SQL Editor에서 실행** (보안 하드닝 — 실행 전까지 버킷 크기 제한·격리 우회 방어 미적용 상태)
-1. [ ] 아이폰 Safari에서 https://baby-diary-tau.vercel.app 접속 → 홈 화면에 추가 → PWA 설치·로그인·사용 전체 플로우 실기기 검증
-2. [ ] 안드로이드 실기기에 GitHub Release(`android-latest`) 최신 APK 설치 → 마일스톤 시트 여백·뒤로가기 인앱 이동·사진 스와이프 3건 모두 실기기 검증
-3. [ ] (지인 확장 시) 가입 → 가족 생성/초대코드로 배우자 합류 온보딩 화면. 스키마·RLS는 이미 멀티테넌트라 앱 온보딩 UI만 추가하면 됨. 무료 플랜은 2~3가족까지 여유, 5가족 이상 활발하면 스토리지 1GB·전송 5GB 압박 → Pro($25/월) 또는 이미지 압축 강화.
-4. [ ] (저장소 압박 시) 사진만 Cloudflare R2로 분리 — 설계는 `docs/r2-photo-plan.md`에 보존, 아직 미실행.
-5. [ ] (정식 배포 시) Android release 서명 키스토어 생성 + release 빌드 서명 설정.
+0. [ ] **Supabase 대시보드에서 이메일 회원가입 ON + Confirm email OFF 설정**
+1. [ ] **`supabase/migrations/0004_signup_multichild_admin.sql`을 SQL Editor에서 실행** 후 `select * from admins;`로 관리자 계정(`waterdrop1137@gmail.com`) 1행 확인
+2. [ ] 실 Supabase에서 종단 검증: 새 이메일 가입 → 온보딩(가족 생성) → 설정에서 초대코드 생성 → 다른 계정으로 합류 → 아이 추가해 다자녀 전환·일기 대상 선택 확인 → 문의 등록 → 관리자 계정으로 `/admin` 접속해 답변 → 원 계정에서 답변 확인
+3. [ ] 안드로이드 실기기에 최신 APK 설치 후 다자녀 스위처·일기 대상 선택·기존 UX(뒤로가기·시트 여백·사진 스와이프) 전체 재검증
+4. [ ] (저장소 압박 시) 사진만 Cloudflare R2로 분리 — 설계는 `docs/r2-photo-plan.md`에 보존, 아직 미실행
+5. [ ] (정식 배포 시) Android release 서명 키스토어 생성 + release 빌드 서명 설정

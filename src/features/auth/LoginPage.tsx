@@ -7,15 +7,21 @@ import { Label } from '@/components/ui/label'
 import { Cloud, Footprint, Star, Sun } from '@/assets/doodles'
 
 export function LoginPage() {
-  const { signIn } = useAuth()
+  const { signIn, signUp } = useAuth()
+  const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [passwordConfirm, setPasswordConfirm] = useState('')
   const [loading, setLoading] = useState(false)
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
+    if (mode === 'signup' && password !== passwordConfirm) {
+      toast.error('비밀번호가 서로 달라요.')
+      return
+    }
     setLoading(true)
-    const error = await signIn(email, password)
+    const error = mode === 'login' ? await signIn(email, password) : await signUp(email, password)
     setLoading(false)
     if (error) toast.error(error)
   }
@@ -49,15 +55,43 @@ export function LoginPage() {
           <Input
             id="password"
             type="password"
-            autoComplete="current-password"
+            autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            minLength={6}
           />
         </div>
+        {mode === 'signup' && (
+          <div className="space-y-1.5">
+            <Label htmlFor="passwordConfirm">비밀번호 확인</Label>
+            <Input
+              id="passwordConfirm"
+              type="password"
+              autoComplete="new-password"
+              value={passwordConfirm}
+              onChange={(e) => setPasswordConfirm(e.target.value)}
+              required
+              minLength={6}
+            />
+          </div>
+        )}
         <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? '로그인 중…' : '로그인'}
+          {loading
+            ? mode === 'login'
+              ? '로그인 중…'
+              : '가입 중…'
+            : mode === 'login'
+              ? '로그인'
+              : '가입하기'}
         </Button>
+        <button
+          type="button"
+          onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
+          className="w-full text-center text-sm text-muted-foreground underline underline-offset-2"
+        >
+          {mode === 'login' ? '계정이 없으신가요? 가입하기' : '이미 계정이 있으신가요? 로그인'}
+        </button>
       </form>
     </div>
   )

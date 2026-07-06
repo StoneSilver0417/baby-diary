@@ -4,12 +4,16 @@ import type { Dividend, InvestNote, StockPrice, Trade } from '@/types/database'
 
 const delay = (ms = 150) => new Promise((r) => setTimeout(r, ms))
 
-export async function getTrades(): Promise<Trade[]> {
+export async function getTrades(childId: string): Promise<Trade[]> {
   if (useMock) {
     await delay()
-    return [...mockState.trades]
+    return mockState.trades.filter((t) => t.child_id === childId)
   }
-  const { data, error } = await supabase.from('trades').select('*').order('trade_date')
+  const { data, error } = await supabase
+    .from('trades')
+    .select('*')
+    .eq('child_id', childId)
+    .order('trade_date')
   if (error) throw error
   return data as Trade[]
 }
@@ -70,12 +74,16 @@ export async function deleteNote(id: string): Promise<void> {
   if (error) throw error
 }
 
-export async function getDividends(): Promise<Dividend[]> {
+export async function getDividends(childId: string): Promise<Dividend[]> {
   if (useMock) {
     await delay()
-    return [...mockState.dividends]
+    return mockState.dividends.filter((d) => d.child_id === childId)
   }
-  const { data, error } = await supabase.from('dividends').select('*').order('dividend_date')
+  const { data, error } = await supabase
+    .from('dividends')
+    .select('*')
+    .eq('child_id', childId)
+    .order('dividend_date')
   if (error) throw error
   return data as Dividend[]
 }

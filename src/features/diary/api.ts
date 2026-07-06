@@ -1,13 +1,14 @@
 import { supabase, useMock } from '@/lib/supabase'
 import { mockState } from '@/lib/mockDb'
 import { compressImage } from '@/lib/image'
-import type { Child, Comment, DiaryEntry, DiaryPhoto, Profile } from '@/types/database'
+import type { Child, Comment, DiaryEntry, DiaryPhoto, Household, Profile } from '@/types/database'
 
 /** diary_entries에 profiles·diary_photos·comments·likes를 임베드한 조인 응답 행 */
 type RawEntryRow = {
   id: string
   household_id: string
   author_id: string
+  child_id: string | null
   entry_date: string
   content: string
   created_at: string
@@ -19,14 +20,24 @@ type RawEntryRow = {
 
 const delay = (ms = 150) => new Promise((r) => setTimeout(r, ms))
 
-export async function getChild(): Promise<Child> {
+export async function getChildren(): Promise<Child[]> {
   if (useMock) {
     await delay()
-    return mockState.child
+    return [...mockState.children].sort((a, b) => a.birth_date.localeCompare(b.birth_date))
   }
-  const { data, error } = await supabase.from('children').select('*').limit(1).single()
+  const { data, error } = await supabase.from('children').select('*').order('birth_date')
   if (error) throw error
-  return data as Child
+  return data as Child[]
+}
+
+export async function getHousehold(): Promise<Household> {
+  if (useMock) {
+    await delay()
+    return mockState.household
+  }
+  const { data, error } = await supabase.from('households').select('*').limit(1).single()
+  if (error) throw error
+  return data as Household
 }
 
 export async function getProfiles(): Promise<Profile[]> {
@@ -96,6 +107,8 @@ type SaveEntryInput = {
   householdId: string
   authorId: string
   authorName: string
+  /** null = "모두"(가족 전체 공용 글) */
+  childId: string | null
   date: string
   content: string
   keepPhotoIds: string[]
@@ -116,6 +129,7 @@ export async function saveEntry(input: SaveEntryInput): Promise<string> {
 
     if (existing) {
       existing.content = input.content
+      existing.child_id = input.childId
       existing.photos = [...keptPhotos, ...newPhotoObjs]
       newPhotoObjs.forEach((p) => (p.entry_id = existing.id))
       return existing.id
@@ -127,6 +141,7 @@ export async function saveEntry(input: SaveEntryInput): Promise<string> {
       id,
       household_id: input.householdId,
       author_id: input.authorId,
+      child_id: input.childId,
       entry_date: input.date,
       content: input.content,
       created_at: new Date().toISOString(),
@@ -146,6 +161,7 @@ export async function saveEntry(input: SaveEntryInput): Promise<string> {
         id: input.entryId,
         household_id: input.householdId,
         author_id: input.authorId,
+        child_id: input.childId,
         entry_date: input.date,
         content: input.content,
       },
@@ -299,6 +315,7 @@ function mapRawEntry(raw: RawEntryRow): DiaryEntry {
     id: raw.id,
     household_id: raw.household_id,
     author_id: raw.author_id,
+    child_id: raw.child_id,
     entry_date: raw.entry_date,
     content: raw.content,
     created_at: raw.created_at,

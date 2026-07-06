@@ -9,26 +9,32 @@ import { childAge } from '@/lib/childAge'
 import { Sun } from '@/assets/doodles'
 import { fabClassName } from '@/components/Fab'
 import { useMyProfile } from '@/features/shared/useHousehold'
-import { useChild, useFeed } from './useDiaryQueries'
+import { useSelectedChild } from '@/features/shared/SelectedChildProvider'
+import { useFeed, useHouseholdInfo } from './useDiaryQueries'
 import { useNewBadge } from './useNewBadge'
 import { EntryPhotos } from './EntryPhotos'
 import { DiaryViewSegment } from './DiaryViewSegment'
 
 export function FeedPage() {
   const { userId } = useAuth()
-  const { data: child } = useChild()
+  const { children } = useSelectedChild()
+  const { data: household } = useHouseholdInfo()
   const { data: feed, isLoading } = useFeed()
   const myProfile = useMyProfile()
   const { isNew } = useNewBadge(myProfile, feed)
 
-  const age = childAge(child?.birth_date)
+  const singleChild = children.length === 1 ? children[0] : undefined
+  const age = childAge(singleChild?.birth_date)
+  const headerTitle = singleChild ? singleChild.name : (household?.name ?? ' ')
+  const childName = (childId: string | null) =>
+    childId ? children.find((c) => c.id === childId)?.name : undefined
 
   return (
     <div className="relative min-h-full">
       <header className="sticky top-0 z-10 border-b border-border bg-background/95 px-5 pt-safe pb-4 backdrop-blur">
         <div className="flex items-start justify-between pt-4">
           <div>
-            <h1 className="text-xl font-semibold text-foreground">{child?.name ?? ' '}</h1>
+            <h1 className="text-xl font-semibold text-foreground">{headerTitle}</h1>
             {age && (
               <p className="text-sm text-muted-foreground">
                 D+{age.days}일 · {age.months}개월
@@ -67,6 +73,9 @@ export function FeedPage() {
               </span>
               {isNew(entry) && (
                 <Badge className="bg-primary text-primary-foreground">새 글</Badge>
+              )}
+              {children.length > 1 && childName(entry.child_id) && (
+                <Badge variant="outline">{childName(entry.child_id)}</Badge>
               )}
             </div>
 

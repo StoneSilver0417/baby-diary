@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { differenceInCalendarDays, format } from 'date-fns'
 import { X } from 'lucide-react'
 import { Fab } from '@/components/Fab'
+import { ChildSwitcher } from '@/components/ChildSwitcher'
 import {
   Sheet,
   SheetContent,
@@ -10,7 +11,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useChild } from '@/features/diary/useDiaryQueries'
+import { useSelectedChild } from '@/features/shared/SelectedChildProvider'
 import { childAge } from '@/lib/childAge'
 import { GrowthChart } from './GrowthChart'
 import { GrowthRecordForm } from './GrowthRecordForm'
@@ -23,9 +24,9 @@ import {
 } from './useGrowthQueries'
 
 export function GrowthPage() {
-  const { data: child } = useChild()
-  const { data: records } = useGrowthRecords()
-  const { data: milestones } = useMilestones()
+  const { selectedChild: child } = useSelectedChild()
+  const { data: records } = useGrowthRecords(child?.id)
+  const { data: milestones } = useMilestones(child?.id)
   const deleteRecord = useDeleteGrowthRecord()
   const deleteMilestone = useDeleteMilestone()
   const [tab, setTab] = useState('records')
@@ -38,13 +39,16 @@ export function GrowthPage() {
 
   return (
     <div className="min-h-full">
-      <header className="border-b border-border px-5 pt-safe pb-4">
-        <h1 className="pt-4 text-xl font-semibold text-foreground">{child?.name} 성장기록</h1>
-        {age && (
-          <p className="text-sm text-muted-foreground">
-            D+{age.days}일 · {age.months}개월
-          </p>
-        )}
+      <header className="space-y-3 border-b border-border px-5 pt-safe pb-4">
+        <div className="pt-4">
+          <h1 className="text-xl font-semibold text-foreground">{child?.name} 성장기록</h1>
+          {age && (
+            <p className="text-sm text-muted-foreground">
+              D+{age.days}일 · {age.months}개월
+            </p>
+          )}
+        </div>
+        <ChildSwitcher />
       </header>
 
       <Tabs value={tab} onValueChange={setTab} className="p-5">
@@ -147,10 +151,10 @@ export function GrowthPage() {
           </SheetHeader>
           <div className="p-4 pt-0">
             {child && tab === 'records' && (
-              <GrowthRecordForm childId={child.id} onDone={() => setSheetOpen(false)} />
+              <GrowthRecordForm key={child.id} childId={child.id} onDone={() => setSheetOpen(false)} />
             )}
             {child && tab === 'milestones' && (
-              <MilestoneForm childId={child.id} onDone={() => setSheetOpen(false)} />
+              <MilestoneForm key={child.id} childId={child.id} onDone={() => setSheetOpen(false)} />
             )}
           </div>
         </SheetContent>

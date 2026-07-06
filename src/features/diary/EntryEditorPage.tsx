@@ -6,10 +6,12 @@ import { X } from 'lucide-react'
 import { useAuth } from '@/features/auth/AuthProvider'
 import { usePhotoUrls } from '@/features/diary/useDiaryQueries'
 import { useHouseholdId, useMyProfile } from '@/features/shared/useHousehold'
+import { useSelectedChild } from '@/features/shared/SelectedChildProvider'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { pickPhotos } from '@/lib/photoPicker'
+import { cn } from '@/lib/utils'
 import { getEntryByDate } from './api'
 import { useSaveEntry } from './useDiaryMutations'
 import type { DiaryPhoto } from '@/types/database'
@@ -20,6 +22,7 @@ export function EntryEditorPage() {
   const { userId } = useAuth()
   const myProfile = useMyProfile()
   const householdId = useHouseholdId()
+  const { children } = useSelectedChild()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const saveEntry = useSaveEntry()
@@ -27,6 +30,7 @@ export function EntryEditorPage() {
   const [date, setDate] = useState(searchParams.get('date') ?? format(new Date(), 'yyyy-MM-dd'))
   const [content, setContent] = useState('')
   const [entryId, setEntryId] = useState<string | undefined>(undefined)
+  const [childId, setChildId] = useState<string | null>(null)
   const [existingPhotos, setExistingPhotos] = useState<DiaryPhoto[]>([])
   const [newPhotos, setNewPhotos] = useState<Blob[]>([])
   const [newPhotoPreviews, setNewPhotoPreviews] = useState<string[]>([])
@@ -38,10 +42,12 @@ export function EntryEditorPage() {
       if (existing) {
         setEntryId(existing.id)
         setContent(existing.content)
+        setChildId(existing.child_id)
         setExistingPhotos(existing.photos)
       } else {
         setEntryId(undefined)
         setContent('')
+        setChildId(null)
         setExistingPhotos([])
       }
       setNewPhotos([])
@@ -89,6 +95,7 @@ export function EntryEditorPage() {
         householdId,
         authorId: userId,
         authorName: myProfile?.display_name ?? '',
+        childId,
         date,
         content,
         keepPhotoIds: existingPhotos.map((p) => p.id),
@@ -108,6 +115,38 @@ export function EntryEditorPage() {
       </h1>
 
       <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+
+      {children.length > 1 && (
+        <div className="flex gap-2 overflow-x-auto">
+          <button
+            type="button"
+            onClick={() => setChildId(null)}
+            className={cn(
+              'shrink-0 rounded-full border px-3 py-1.5 text-sm',
+              childId === null
+                ? 'border-primary bg-accent text-accent-foreground'
+                : 'border-border text-muted-foreground',
+            )}
+          >
+            모두
+          </button>
+          {children.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => setChildId(c.id)}
+              className={cn(
+                'shrink-0 rounded-full border px-3 py-1.5 text-sm',
+                childId === c.id
+                  ? 'border-primary bg-accent text-accent-foreground'
+                  : 'border-border text-muted-foreground',
+              )}
+            >
+              {c.name}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-3">
         {existingPhotos.map((photo, i) => (

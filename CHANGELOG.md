@@ -1,5 +1,42 @@
 # Changelog
 
+## 2026-07-06 (v0.10.1)
+
+### 변경 사항 — 앱 아이콘 교체
+- 사용자가 제공한 새 아이콘 이미지(따뜻한 크림톤 육아일기장 + 아기 얼굴 + 곰인형·젖병·별·하트 장식, 1254×1254 PNG)로 교체. `src/assets/app-icon.svg`(손그림 SVG, 코랄 배경)를 삭제하고 `src/assets/app-icon.png`을 새 마스터 소스로 사용.
+- `scripts/generate-icons.mjs`를 SVG 래스터화 방식에서 PNG 리사이즈 방식으로 변경. 새 아이콘의 배경색(거의 순백, `#fefdff`)을 스플래시·마스커블 안전영역 배경에도 동일하게 적용해 이음매 없이 이어지도록 함.
+- 마스커블 아이콘(`maskable-512.png`)은 새 아이콘을 80% 크기로 축소해 중앙 배치 — 아이콘 자체가 이미 모서리가 둥근 사각형 그래픽이라, 안드로이드 런처가 원형 등으로 마스킹해도 곰인형·젖병 같은 모서리 장식이 잘리지 않도록 여유 안전영역을 확보.
+- `public/icons/*`, `public/favicon.png`, `assets/icon.png`(Capacitor), `assets/splash.png` 전체 재생성 후 `npx capacitor-assets generate --android`로 안드로이드 mipmap 아이콘(4종×5밀도)·스플래시(라이트/다크×세로/가로×6밀도) 87개 파일 갱신, APK 재빌드 후 GitHub Release(`android-latest`) 업로드 완료.
+
+### 의사결정 배경
+- **SVG 파이프라인을 유지하지 않고 PNG로 완전히 전환**: 사용자가 제공한 이미지가 이미 완성된 래스터 일러스트(음영·질감이 있는 3D 스타일)라 SVG로 재현하는 것은 비현실적이고 불필요 — 원본 품질을 그대로 쓰는 게 낫다고 판단. 기존 SVG는 더 이상 어디서도 참조되지 않아 완전히 삭제(죽은 코드 방지).
+- **마스커블 안전영역을 80%로 설정**: 새 아이콘은 이미 자체적으로 둥근 사각형 카드 모양이라 캔버스 전체를 거의 채우고 있음 — 안드로이드 적응형 아이콘 마스크(원형 등)가 그대로 적용되면 곰인형·별 장식의 모서리가 잘릴 수 있어, 기존 아이콘과 동일하게 80% 축소 후 배경색으로 여백을 채우는 방식을 유지.
+
+## 2026-07-06 (v0.10.0)
+
+### 변경 사항 — 공개 회원가입·배우자 초대·다자녀·문의/관리자
+사용자 요청: "새로운 사용자 회원가입 후 배우자초대 및 자녀둘이상일때 분기하기 관리자에게 문의남기는것 관리자는 내아이디로 관리자페이지 따로구성". 지금까지 폐쇄형(관리자가 SQL로 수동 계정·가족 생성)이던 온보딩을 실제 공개 서비스 형태로 확장.
+
+- **마이그레이션 `supabase/migrations/0004_signup_multichild_admin.sql`(신규, ⚠️ 미적용)**:
+  - `create_household_with_child(household_name, display_name, child_name, child_birth)` SECURITY DEFINER RPC — 회원가입 후 온보딩에서 households/profiles/children 3-테이블 insert를 원자적으로 처리. RLS insert 정책을 직접 여는 대신 RPC로만 열어 household_id 위조를 원천 차단(households/profiles에 insert 정책 자체를 추가하지 않음).
+  - `invites` 테이블 + `create_invite()`/`join_household(code, display_name)` RPC — 8자 코드(32^8 조합, 혼동 문자 제외), 72시간 만료, 1회성(`for update`로 동시 사용 경합 차단), 가구당 활성 코드 5개·구성원 4명 제한.
+  - `diary_entries.child_id`(nullable, FK children, null="모두") 추가 — insert/update RLS에 "child_id가 null이거나 내 household 소속 아이여야 함" 조건 추가.
+  - `admins` 테이블(RLS 정책 0개 — 클라이언트 직접 접근 전면 차단) + `is_admin()` — `profiles.role` 방식은 본인 행 update가 허용된 RLS 특성상 셀프 승격이 가능해 배제. 관리자 계정(`waterdrop1137@gmail.com`)을 이메일로 조회해 시드.
+  - `inquiries` 테이블(문의 2000자 제한, 답변 대기 5개 초과 트리거 차단) + `admin_stats()` RPC(가족·구성원·아이·일기·미답변 문의 수).
+- **가입/온보딩**: `AuthProvider.signUp` 추가(이메일 인증 없이 즉시 가입), `LoginPage`에 로그인/가입 모드 토글. `src/features/onboarding/`(신규) — 가입 직후 "새 가족 만들기" 또는 "초대코드로 합류" 선택. `ProtectedRoute.tsx`에 `OnboardingGate`(profiles 행 없으면 `/onboarding`으로 강제 이동 — `my_household_id()`가 null이라 RLS가 자연 차단되는 상태를 프론트에서 감지)와 `RedirectIfOnboarded` 추가.
+- **다자녀 지원**: `getChild().limit(1).single()` 단일 아이 강제 조회를 `getChildren()`(전체, 생일순)으로 교체. `src/features/shared/SelectedChildProvider.tsx`(신규) — 아이 목록 + 선택 상태를 Context+localStorage로 관리, 삭제 등으로 선택값이 무효해지면 첫째로 자동 폴백. `ChildSwitcher`(신규 공용 컴포넌트)를 성장·투자 탭 헤더에 배치(아이 1명이면 자동 숨김). 성장·투자 쿼리(`getGrowthRecords`/`getMilestones`/`getTrades`/`getDividends`)에 `childId` 필터 추가, queryKey에도 포함해 아이별로 캐시 분리. 설정 탭에 아이별 수정 폼 + "아이 추가" 추가.
+- **일기 대상 선택**: `EntryEditorPage`에 아이 2명 이상일 때만 노출되는 "모두/아이별" 세그먼트 추가(1명이면 기존 UX 완전 불변). 피드·상세 화면에 대상 아이 뱃지 표시(2명 이상 + 특정 아이 지정 시에만).
+- **관리자 문의/페이지**: 설정 탭 "문의하기" 섹션(등록 + 내 문의·답변 목록), `src/features/admin/`(신규) — `/admin` 라우트(`AdminRoute` 가드, `is_admin()` RPC 기반), 문의 목록·답변 작성·전체 현황(`admin_stats`) 대시보드.
+- Playwright(mock, 아이 2명 시드)로 스모크: 피드 헤더가 가족명으로 전환 + 대상 뱃지, 성장 탭 아이 전환 시 기록이 완전히 분리(둘째는 빈 상태), 작성 화면 대상 선택 → 저장 → 뱃지 반영, 설정 화면 아이 목록/추가/초대/문의 섹션 렌더 확인(콘솔 에러 0건). 그 과정에서 `ChildSwitcher`의 Tabs가 비제어→제어로 전환되는 React 경고를 발견해 `value={selectedChildId ?? ''}`로 수정.
+
+### 의사결정 배경
+- **households/profiles insert를 RLS 정책이 아닌 RPC로만 연 이유**: `with check`로 `household_id`의 정당성(위조 여부)을 표현할 방법이 없다 — RLS insert 정책을 열면 다른 가족의 UUID를 알아내는 것만으로 그 가족에 합류할 수 있는 격리 우회가 생긴다. SECURITY DEFINER 함수 내부에서 household_id를 직접 생성/검증하면 위조가 원천적으로 불가능하고, 3-테이블 insert도 단일 트랜잭션이 되어 중간 실패로 인한 고아 household도 없다.
+- **관리자 판별을 profiles.role 대신 admins 테이블로**: role 컬럼 방식은 기존 `profiles_update_own` 정책(`using (id = auth.uid())`)이 본인 행 수정을 허용하므로 사용자가 자기 role을 직접 관리자로 바꾸는 셀프 승격이 가능해진다. admins 테이블은 RLS 정책을 아예 만들지 않아 클라이언트가 읽기/쓰기 어느 것도 할 수 없고, `is_admin()`도 SECURITY DEFINER라 우회 불가능.
+- **온보딩 미완료 사용자를 별도 에러 처리 없이 자연 차단으로 설계**: 가입만 하고 아직 `profiles` 행이 없는 사용자는 `my_household_id()`가 null을 반환해 모든 RLS 조건(`household_id = my_household_id()`)이 자동으로 false가 되므로, 별도 방어 코드 없이 전 테이블 접근이 차단된다. 프론트의 `OnboardingGate`는 이 상태를 "에러"가 아니라 "profiles가 빈 배열"로 감지해 온보딩으로 유도할 뿐, 실제 방어는 전적으로 DB 레벨에서 이미 끝나 있다.
+- **다자녀 전환에서 기존 API 함수명을 그대로 유지하지 않고 getChild→getChildren으로 이름을 바꾼 이유**: 반환 타입이 단일 객체에서 배열로 바뀌는 파괴적 변경이라, 이름을 유지하면 호출부에서 타입 오류 없이 잘못된 가정(여전히 단일 아이)으로 컴파일될 위험이 있었다. 이름을 바꿔 모든 호출부를 강제로 다시 검토하게 만들었다.
+- **일기는 다자녀여도 child_id를 필수로 만들지 않고 nullable(="모두")로 설계**: 사용자가 명시한 요구사항이 "대상을 모두, 자녀선택 고르기 분기"였고, 실제로 형제 공통 이벤트(가족 나들이 등)를 특정 아이 하나에 억지로 귀속시키는 것은 부자연스럽다. null을 "가족 전체"라는 유효한 의미로 설계해 UI에서도 "모두"를 동등한 선택지로 제공했다.
+- **mock 모드는 다자녀 UI 검증까지만 지원하고 가입·온보딩·초대·문의·관리자는 지원하지 않음**: 이 기능들의 핵심 위험은 Auth 세션·RPC·RLS 상호작용인데 mock으로는 애초에 검증 불가능한 영역이고, mock에 Auth 시뮬레이션까지 넣으면 유지비만 늘어난다. 대신 각 함수가 mock에서 명시적 에러를 던지게 해 실수로 mock 모드에서 호출되면 바로 드러나게 했다.
+
 ## 2026-07-05 (v0.9.2)
 
 ### 변경 사항

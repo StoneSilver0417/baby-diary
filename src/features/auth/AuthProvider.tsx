@@ -7,6 +7,7 @@ type AuthContextValue = {
   /** undefined = 세션 판정 전, null = 로그아웃 상태 */
   userId: string | null | undefined
   signIn: (email: string, password: string) => Promise<string | null>
+  signUp: (email: string, password: string) => Promise<string | null>
   signOut: () => Promise<void>
 }
 
@@ -51,6 +52,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return error ? error.message : null
   }
 
+  async function signUp(email: string, password: string) {
+    if (useMock) {
+      return '모의 모드에서는 회원가입을 지원하지 않아요.'
+    }
+    const { error } = await supabase.auth.signUp({ email, password })
+    return error ? error.message : null
+  }
+
   async function signOut() {
     if (useMock) {
       localStorage.removeItem(MOCK_STORAGE_KEY)
@@ -62,7 +71,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ userId, signIn, signOut }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ userId, signIn, signUp, signOut }}>
+      {children}
+    </AuthContext.Provider>
   )
 }
 

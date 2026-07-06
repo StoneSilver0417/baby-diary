@@ -36,6 +36,8 @@ export type DiaryEntry = {
   id: string
   household_id: string
   author_id: string
+  /** null = 대상 아이 지정 없이 가족 전체를 향한 글("모두") */
+  child_id: string | null
   entry_date: string
   content: string
   created_at: string
@@ -102,4 +104,32 @@ export type StockPrice = {
   stock_name: string
   current_price: number
   updated_at: string
+}
+
+export type Invite = {
+  id: string
+  household_id: string
+  code: string
+  created_by: string
+  created_at: string
+  expires_at: string
+  used_by: string | null
+  used_at: string | null
+}
+
+export type Inquiry = {
+  id: string
+  author_id: string
+  content: string
+  reply: string | null
+  replied_at: string | null
+  created_at: string
+}
+
+export type AdminStats = {
+  households: number
+  profiles: number
+  children: number
+  entries: number
+  open_inquiries: number
 }

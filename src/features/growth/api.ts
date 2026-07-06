@@ -4,12 +4,18 @@ import type { GrowthRecord, Milestone } from '@/types/database'
 
 const delay = (ms = 150) => new Promise((r) => setTimeout(r, ms))
 
-export async function getGrowthRecords(): Promise<GrowthRecord[]> {
+export async function getGrowthRecords(childId: string): Promise<GrowthRecord[]> {
   if (useMock) {
     await delay()
-    return [...mockState.growthRecords].sort((a, b) => a.record_date.localeCompare(b.record_date))
+    return mockState.growthRecords
+      .filter((r) => r.child_id === childId)
+      .sort((a, b) => a.record_date.localeCompare(b.record_date))
   }
-  const { data, error } = await supabase.from('growth_records').select('*').order('record_date')
+  const { data, error } = await supabase
+    .from('growth_records')
+    .select('*')
+    .eq('child_id', childId)
+    .order('record_date')
   if (error) throw error
   return data as GrowthRecord[]
 }
@@ -71,16 +77,17 @@ export async function deleteGrowthRecord(id: string): Promise<void> {
   if (error) throw error
 }
 
-export async function getMilestones(): Promise<Milestone[]> {
+export async function getMilestones(childId: string): Promise<Milestone[]> {
   if (useMock) {
     await delay()
-    return [...mockState.milestones].sort((a, b) =>
-      b.milestone_date.localeCompare(a.milestone_date),
-    )
+    return mockState.milestones
+      .filter((m) => m.child_id === childId)
+      .sort((a, b) => b.milestone_date.localeCompare(a.milestone_date))
   }
   const { data, error } = await supabase
     .from('milestones')
     .select('*')
+    .eq('child_id', childId)
     .order('milestone_date', { ascending: false })
   if (error) throw error
   return data as Milestone[]

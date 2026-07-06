@@ -5,6 +5,7 @@ import type {
   DiaryPhoto,
   Dividend,
   GrowthRecord,
+  Household,
   InvestNote,
   Milestone,
   Profile,
@@ -40,17 +41,30 @@ export const mockState = {
     display_name: u.display_name,
     last_seen_diary_at: null,
   })),
-  child: {
-    id: 'child-1',
-    household_id: HOUSEHOLD_ID,
-    name: '하은',
-    birth_date: iso(daysAgo(200)),
-  } as Child,
+  household: {
+    id: HOUSEHOLD_ID,
+    name: '우리집',
+  } as Household,
+  children: [
+    {
+      id: 'child-1',
+      household_id: HOUSEHOLD_ID,
+      name: '하은',
+      birth_date: iso(daysAgo(200)),
+    },
+    {
+      id: 'child-2',
+      household_id: HOUSEHOLD_ID,
+      name: '도윤',
+      birth_date: iso(daysAgo(20)),
+    },
+  ] as Child[],
   entries: [
     {
       id: 'entry-1',
       household_id: HOUSEHOLD_ID,
       author_id: 'user-b',
+      child_id: null,
       entry_date: iso(daysAgo(1)),
       content: '오늘 처음으로 뒤집기에 성공했어요! 너무 신기해서 몇 번이나 다시 보여줬어요.',
       created_at: daysAgo(1).toISOString(),
@@ -63,6 +77,7 @@ export const mockState = {
       id: 'entry-2',
       household_id: HOUSEHOLD_ID,
       author_id: 'user-a',
+      child_id: 'child-1',
       entry_date: iso(daysAgo(3)),
       content: '이유식을 처음 먹어봤는데 표정이 너무 웃겼다.',
       created_at: daysAgo(3).toISOString(),

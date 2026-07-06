@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router'
 import { format } from 'date-fns'
 import { ChevronLeft, Heart, Trash2, X } from 'lucide-react'
 import { useAuth } from '@/features/auth/AuthProvider'
+import { useSelectedChild } from '@/features/shared/SelectedChildProvider'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -25,6 +27,7 @@ export function EntryDetailPage() {
   const { userId } = useAuth()
   const { data: entry, isLoading } = useEntry(id)
   const { data: profiles } = useProfiles()
+  const { children } = useSelectedChild()
   const toggleLike = useToggleLike(userId ?? '')
   const addComment = useAddComment(userId ?? '')
   const deleteComment = useDeleteComment()
@@ -64,6 +67,11 @@ export function EntryDetailPage() {
         <span className="font-hand text-lg font-medium">
           {entry.authorName} · {format(new Date(entry.entry_date), 'M월 d일')}
         </span>
+        {children.length > 1 && entry.child_id && (
+          <Badge variant="outline">
+            {children.find((c) => c.id === entry.child_id)?.name}
+          </Badge>
+        )}
         {isMyEntry && (
           <Dialog>
             <DialogTrigger asChild>

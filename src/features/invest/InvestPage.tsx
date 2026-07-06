@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { format } from 'date-fns'
 import { X } from 'lucide-react'
 import { Fab } from '@/components/Fab'
+import { ChildSwitcher } from '@/components/ChildSwitcher'
 import {
   Sheet,
   SheetContent,
@@ -14,8 +15,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuth } from '@/features/auth/AuthProvider'
-import { useChild, useProfiles } from '@/features/diary/useDiaryQueries'
+import { useProfiles } from '@/features/diary/useDiaryQueries'
 import { useHouseholdId } from '@/features/shared/useHousehold'
+import { useSelectedChild } from '@/features/shared/SelectedChildProvider'
 import { cn } from '@/lib/utils'
 import { computeHoldings, enrichHoldings, type EnrichedHolding } from './holdings'
 import { computeYearlySummary } from './summary'
@@ -40,11 +42,11 @@ type TimelineItem =
 
 export function InvestPage() {
   const { userId } = useAuth()
-  const { data: child } = useChild()
+  const { selectedChild: child } = useSelectedChild()
   const { data: profiles } = useProfiles()
-  const { data: trades } = useTrades()
+  const { data: trades } = useTrades(child?.id)
   const { data: notes } = useNotes()
-  const { data: dividends } = useDividends()
+  const { data: dividends } = useDividends(child?.id)
   const { data: prices } = usePrices()
   const deleteTrade = useDeleteTrade()
   const deleteDividend = useDeleteDividend()
@@ -83,8 +85,9 @@ export function InvestPage() {
 
   return (
     <div className="min-h-full pt-safe">
-      <header className="p-5">
+      <header className="space-y-3 p-5">
         <h1 className="text-xl font-semibold text-foreground">{child?.name} 투자일기</h1>
+        <ChildSwitcher />
       </header>
 
       {/* 보유 현황 */}
@@ -221,10 +224,14 @@ export function InvestPage() {
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="trade" className="pt-4">
-                {child && <TradeForm childId={child.id} onDone={() => setSheetOpen(false)} />}
+                {child && (
+                  <TradeForm key={child.id} childId={child.id} onDone={() => setSheetOpen(false)} />
+                )}
               </TabsContent>
               <TabsContent value="dividend" className="pt-4">
-                {child && <DividendForm childId={child.id} onDone={() => setSheetOpen(false)} />}
+                {child && (
+                  <DividendForm key={child.id} childId={child.id} onDone={() => setSheetOpen(false)} />
+                )}
               </TabsContent>
               <TabsContent value="note" className="pt-4">
                 <NoteForm onDone={() => setSheetOpen(false)} />

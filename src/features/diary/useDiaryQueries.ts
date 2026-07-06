@@ -1,9 +1,13 @@
 import { useQuery, useQueries } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/queryClient'
-import { getChild, getEntry, getFeed, getProfiles, getSignedPhotoUrl } from './api'
+import { getChildren, getEntry, getFeed, getHousehold, getProfiles, getSignedPhotoUrl } from './api'
 
-export function useChild() {
-  return useQuery({ queryKey: queryKeys.child, queryFn: getChild })
+export function useChildren() {
+  return useQuery({ queryKey: queryKeys.children, queryFn: getChildren })
+}
+
+export function useHouseholdInfo() {
+  return useQuery({ queryKey: queryKeys.household, queryFn: getHousehold })
 }
 
 export function useProfiles() {
