@@ -11,7 +11,8 @@
 - 프레임워크: React 19 + TypeScript + Vite (정적 SPA — Next.js SSR은 Capacitor로 못 감싸므로 금지)
 - UI: Tailwind CSS + shadcn/ui, 상태/캐시: TanStack Query (옵티미스틱 업데이트 필수)
 - DB/백엔드: Supabase (Auth·Postgres·Storage·RLS) — 서버 코드 없음. 마이그레이션은 `supabase/` 폴더에 SQL로 관리
-- 배포: 안드로이드 = Capacitor 8 디버그 APK를 GitHub Release(`android-latest` 태그, 파일만 계속 교체)로 배포 — https://github.com/StoneSilver0417/baby-diary/releases/tag/android-latest (appId `com.wooseokshim.babydiary`, `capacitor.config.ts`) / 아이폰 = PWA(홈화면 추가, `vite-plugin-pwa`) / 웹 = Vercel
+- 배포: 안드로이드 = ① PWA(웹앱 설치, 추천) ② Capacitor 8 디버그 APK를 GitHub Release(`android-latest` 태그, 파일만 계속 교체)로 배포 — https://github.com/StoneSilver0417/baby-diary/releases/tag/android-latest (appId `com.wooseokshim.babydiary`, `capacitor.config.ts`) / 아이폰 = PWA(홈화면 추가, `vite-plugin-pwa`) / 웹 = Vercel
+- **저장소는 Public**(v0.10.3부터, 지인 배포 시 GitHub 로그인 없이 APK 다운로드 가능하게 하려고 전환) — 커밋 전 항상 시크릿 유무 재확인할 것(`.env.local`/`android/local.properties`는 gitignore 대상, 지금까지 커밋 이력 없음 확인됨).
 
 ## 주요 명령어
 ```bash
