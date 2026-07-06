@@ -2,14 +2,15 @@
 
 ## 현재 상태
 
-- **버전**: v0.10.2 (관리자 계정 "가족 구성원" 정보 노출 버그 수정)
+- **버전**: v0.10.3 (지난 날짜 일기 수정 버튼 추가)
 - **빌드 상태**: `npx tsc --noEmit` 통과, `npm run build` 통과. 안드로이드 디버그 APK 재빌드 및 GitHub Release(`android-latest`) 업로드 완료(수정 반영).
 - **배포 상태**: 웹·안드로이드 모두 실 프로덕션에서 회원가입→온보딩→초대→다자녀→일기대상→문의 E2E 검증 완료(테스트 계정 사용, 정리 SQL은 "알려진 이슈" 참고). 마이그레이션 0004·대시보드 이메일 가입 설정 모두 적용 완료.
 - **실행 방법/URL**: 웹 https://baby-diary-tau.vercel.app / 안드로이드 https://github.com/StoneSilver0417/baby-diary/releases/tag/android-latest / 로컬 `npm run dev`(`.env.local`의 `VITE_USE_MOCK=false`, 실 Supabase 연결).
 
 ## 최근 작업
 
-- **관리자 계정 "가족 구성원" 정보 노출 버그 수정 (v0.10.2)**: 사용자가 실 프로덕션에서 관리자 계정 로그인 후 설정 화면에 발견 — "내 가족 구성원에 테스트계정 뜸". 원인은 관리자 대시보드용으로 열어둔 `profiles` select RLS(`or is_admin()`)를 household 필터 없는 범용 쿼리(`getProfiles`)가 그대로 화면에 뿌린 것. `SettingsPage`의 `InviteSection`에서 `household_id` 기준으로 클라이언트 필터링 추가해 수정. 안드로이드 APK 재빌드·GitHub Release 갱신 완료, 웹은 push로 자동 배포.
+- **지난 날짜 일기 수정 버튼 추가 (v0.10.3)**: 사용자 제보 "일기쓴거 수정안됨" — 상세 화면에 삭제만 있고 수정 버튼이 없어 당일 글 외엔 편집 진입로가 없던 기존(v0.1.0부터) 공백. `EntryDetailPage`에 본인 글 전용 "수정"(연필) 버튼 추가, `/write?date=<entry_date>`로 연결(기존 날짜 기반 upsert 로직 그대로 재사용, 백엔드 변경 없음).
+- **관리자 계정 "가족 구성원" 정보 노출 버그 수정 (v0.10.2)**: 사용자가 실 프로덕션에서 관리자 계정 로그인 후 설정 화면에 발견 — "내 가족 구성원에 테스트계정 뜸". 원인은 관리자 대시보드용으로 열어둔 `profiles` select RLS(`or is_admin()`)를 household 필터 없는 범용 쿼리(`getProfiles`)가 그대로 화면에 뿌린 것. `SettingsPage`의 `InviteSection`에서 `household_id` 기준으로 클라이언트 필터링 추가해 수정.
 - **공개 회원가입·배우자 초대·다자녀·관리자 문의 + 앱 아이콘 교체 (v0.10.0~v0.10.1)**: 사용자 요청 "회원가입 후 배우자초대 및 자녀둘이상일때 분기, 관리자에게 문의, 관리자페이지 별도 구성"을 전부 구현하고 새 앱 아이콘으로 교체. 상세는 CHANGELOG 참고. 핵심 요약:
   - **마이그레이션 `supabase/migrations/0004_signup_multichild_admin.sql`(적용 완료)**: 가족 생성/초대합류 RPC(`create_household_with_child`/`create_invite`/`join_household`), `diary_entries.child_id`, `admins`/`is_admin()`, `inquiries`, `admin_stats()`.
   - 가입(`AuthProvider.signUp`, `LoginPage` 로그인/가입 토글) + 온보딩(`src/features/onboarding/`, `OnboardingGate`).

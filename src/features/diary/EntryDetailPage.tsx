@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { Link, useNavigate, useParams } from 'react-router'
 import { format } from 'date-fns'
-import { ChevronLeft, Heart, Trash2, X } from 'lucide-react'
+import { ChevronLeft, Heart, Pencil, Trash2, X } from 'lucide-react'
 import { useAuth } from '@/features/auth/AuthProvider'
 import { useSelectedChild } from '@/features/shared/SelectedChildProvider'
 import { Badge } from '@/components/ui/badge'
@@ -73,33 +73,38 @@ export function EntryDetailPage() {
           </Badge>
         )}
         {isMyEntry && (
-          <Dialog>
-            <DialogTrigger asChild>
-              <button className="ml-auto text-muted-foreground" aria-label="일기 삭제">
-                <Trash2 className="size-5" />
-              </button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>일기를 삭제할까요?</DialogTitle>
-              </DialogHeader>
-              <p className="text-sm text-muted-foreground">
-                삭제하면 사진·댓글·좋아요도 함께 사라지며 되돌릴 수 없어요.
-              </p>
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button variant="outline">취소</Button>
-                </DialogClose>
-                <Button
-                  variant="destructive"
-                  onClick={handleDeleteEntry}
-                  disabled={deleteEntry.isPending}
-                >
-                  삭제
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <div className="ml-auto flex items-center gap-3">
+            <Link to={`/write?date=${entry.entry_date}`} className="text-muted-foreground" aria-label="일기 수정">
+              <Pencil className="size-5" />
+            </Link>
+            <Dialog>
+              <DialogTrigger asChild>
+                <button className="text-muted-foreground" aria-label="일기 삭제">
+                  <Trash2 className="size-5" />
+                </button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>일기를 삭제할까요?</DialogTitle>
+                </DialogHeader>
+                <p className="text-sm text-muted-foreground">
+                  삭제하면 사진·댓글·좋아요도 함께 사라지며 되돌릴 수 없어요.
+                </p>
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button variant="outline">취소</Button>
+                  </DialogClose>
+                  <Button
+                    variant="destructive"
+                    onClick={handleDeleteEntry}
+                    disabled={deleteEntry.isPending}
+                  >
+                    삭제
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
         )}
       </header>
 
