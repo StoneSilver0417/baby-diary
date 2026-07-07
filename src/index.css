@@ -81,9 +81,10 @@
   }
   html {
     height: 100%;
-    /* 안드로이드 Chrome/WebView의 자동 폰트 확대(text-size-adjust)를 끈다.
-       확대 비율이 기기 화면 크기·밀도에 따라 달라져 paper-lines 배경의 고정
-       줄 간격과 실제 텍스트 줄 높이가 기기마다 다르게 어긋나는 원인이었다. */
+    /* 모바일 브라우저(iOS Safari가 원조, 안드로이드 Chrome/WebView도 동일 채택)의
+       자동 폰트 확대(text-size-adjust)를 끈다. 확대 비율이 기기 화면 크기·밀도에
+       따라 달라져 paper-lines 배경의 고정 줄 간격과 실제 텍스트 줄 높이가
+       기기마다 다르게 어긋나는 원인이었다. */
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
   }
