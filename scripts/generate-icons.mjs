@@ -9,8 +9,8 @@ const iconPath = path.join(root, 'src/assets/app-icon.png')
 const outDir = path.join(root, 'public/icons')
 
 const source = readFileSync(iconPath)
-// 소스 이미지 배경(거의 순백)에 맞춰 스플래시·마스커블 안전영역 배경을 통일 — 이음매 방지
-const bgColor = '#fefdff'
+// 소스 이미지 배경(다크 네이비)에 맞춰 스플래시·마스커블 안전영역 배경을 통일 — 이음매 방지
+const bgColor = '#3c3a42'
 
 const targets = [
   { file: 'icon-192.png', size: 192 },
