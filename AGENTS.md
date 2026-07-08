@@ -27,7 +27,7 @@ npm run icons    # src/assets/app-icon.png → public/icons/* 재생성 (sharp)
 | ---- | -- | ---- |
 | Supabase | 새 조직 `baby-diary`, 프로젝트 1개, Seoul 리전 (URL: `isouteawnehcyfufrhrw.supabase.co`) | couple-finance 조직은 무료 플랜 2개 한도 소진 — 별도 조직으로 새 무료 슬롯 확보. **실제 연결 완료(v0.4.0)**, `.env.local`에 URL/anon key 설정됨(gitignore 대상) |
 | 계정 | v0.10.0부터 공개 회원가입(이메일 인증 없음) + 온보딩(가족 생성/초대코드 합류) | 실제 이메일/비밀번호는 보안상 이 저장소에 기록하지 않음 — 대시보드 Authentication에서 UID로 관리 |
-| 관리자 | `waterdrop1137@gmail.com`(본인 계정) — `admins` 테이블(RLS 정책 없음) + `is_admin()` RPC로 판별 | `/admin`에서 문의 답변·전체 현황 확인. 새 관리자 추가 시 `insert into admins (user_id) select id from auth.users where email = '...'` |
+| 관리자 | `waterdrop11@naver.com`(본인=아빠 계정) — `admins` 테이블(RLS 정책 없음) + `is_admin()` RPC로 판별 (2026-07-08 실 DB에서 확인) | `/admin`에서 문의 답변·전체 현황 확인. 새 관리자 추가 시 `insert into admins (user_id) select id from auth.users where email = '...'` |
 
 ## Mock 모드 (Supabase 연결 전 UI 검증용, 필요 시 `VITE_USE_MOCK=true`로 전환 가능)
 - `.env.local`의 `VITE_USE_MOCK=true`면 `src/lib/mockDb.ts`의 인메모리 데이터로 동작. `src/lib/supabase.ts`/`useMock` 플래그를 각 feature의 `api.ts`가 분기 처리. 현재는 실제 연결(`false`)이 기본값.
