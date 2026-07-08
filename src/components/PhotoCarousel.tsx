@@ -3,7 +3,19 @@ import { cn } from '@/lib/utils'
 
 const SWIPE_THRESHOLD = 50 // px
 
-export function PhotoCarousel({ urls, className }: { urls: string[]; className?: string }) {
+export function PhotoCarousel({
+  urls,
+  className,
+  fit = 'cover',
+  fill = false,
+}: {
+  urls: string[]
+  className?: string
+  /** 이미지 맞춤: 피드 썸네일은 cover(꽉 채움), 상세 뷰어는 contain(전체 표시) */
+  fit?: 'cover' | 'contain'
+  /** true면 정사각형 대신 부모 높이를 꽉 채운다(전체화면 뷰어용) */
+  fill?: boolean
+}) {
   const [index, setIndex] = useState(0)
   const [dragOffset, setDragOffset] = useState(0)
   const [dragging, setDragging] = useState(false)
@@ -36,7 +48,11 @@ export function PhotoCarousel({ urls, className }: { urls: string[]; className?:
 
   return (
     <div
-      className={cn('relative aspect-square w-full touch-pan-y overflow-hidden bg-muted', className)}
+      className={cn(
+        'relative w-full touch-pan-y overflow-hidden',
+        fill ? 'h-full' : 'aspect-square bg-muted',
+        className,
+      )}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={endDrag}
@@ -54,7 +70,7 @@ export function PhotoCarousel({ urls, className }: { urls: string[]; className?:
             src={url}
             alt=""
             draggable={false}
-            className="size-full shrink-0 object-cover"
+            className={cn('size-full shrink-0', fit === 'contain' ? 'object-contain' : 'object-cover')}
           />
         ))}
       </div>
