@@ -38,7 +38,7 @@ export function GrowthPage() {
   )
 
   return (
-    <div className="min-h-full">
+    <div className="min-h-full pb-20">
       <header className="space-y-3 border-b border-border px-5 pt-safe pb-4">
         <div className="pt-4">
           <h1 className="text-xl font-semibold text-foreground">{child?.name} 성장기록</h1>

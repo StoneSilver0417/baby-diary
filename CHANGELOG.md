@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-07-08 (v0.11.1)
+
+### 변경 사항 — 앱 셸 레이아웃을 scroll-body-shell 구조로 리팩터
+StyleGallery(CSS 레이아웃 패턴 카탈로그, github.com/changeroa/StyleGallery)를 참고해 우리 레이아웃을 점검한 결과, 하단 탭바 처리 방식이 유일하게 개선 여지가 있어 리팩터.
+
+- **원인/동기**: 기존 `AppShell`은 하단 탭바를 `position: fixed`로 띄우고, 본문(`main`)에 `pb-nav`(= `calc(5rem + safe-area)`)라는 **수동 매직넘버 여백**을 줘서 콘텐츠가 탭바에 가리지 않게 했다. 이 방식은 탭바 실제 높이(폰트 확대·기기별 safe-area로 달라짐)와 매직넘버가 어긋나면 콘텐츠가 탭바에 가리는 취약점이 있었다 — 실제로 과거 "실기기에서 FAB·버튼이 하단 탭바에 가려 잘리는 문제"(CHANGELOG 이력)가 이 계열 버그였다.
+- **수정**: `AppShell`을 StyleGallery의 **scroll-body-shell** 패턴(`display: grid; grid-template-rows: minmax(0,1fr) auto; height: 100dvh`)으로 바꿔 탭바를 grid의 실제 한 행으로 배치. 이제 본문이 탭바에 가리는 일이 **구조적으로 불가능**하고 `pb-nav` 매직넘버가 필요 없어져 제거했다. 탭바가 겹치지 않으므로 EntryDetail의 sticky 댓글 입력줄도 탭바 위에 깔끔하게 안착한다.
+- **FAB 처리**: 플로팅 추가 버튼은 뷰포트 고정이 정석이라 `fixed`(bottom-fab) 유지. 대신 FAB이 뜨는 3개 화면(피드·성장·투자)에는 마지막 콘텐츠가 FAB에 가리지 않도록 화면별 하단 여백(`pb-20`)만 남겼다(탭바 여백은 grid가 담당하므로 분리됨).
+- **덤: EntryDetail 댓글 입력줄 sticky-footer 적용**: 기존에는 일기 본문이 짧으면 sticky 댓글 입력줄이 화면 중앙에 떠 보이는 문제가 있었다(콘텐츠가 짧아 스크롤이 없으면 `sticky bottom-0`이 바닥에 붙지 못함, 셸 리팩터와 무관한 기존 버그). StyleGallery의 **sticky-footer** 패턴(`grid-template-rows: 1fr auto`)을 적용해 본문이 짧아도 입력줄이 항상 하단에 붙고, 길면 스크롤되며 sticky로 떠 있도록 통일.
+- **검증**: Playwright(iPhone 뷰포트, 실제 프로덕션 빌드 preview)로 피드·성장(스크롤 하단)·EntryDetail(짧은 글/긴 글 스크롤) 전부 확인 — 탭바·FAB에 콘텐츠가 가리지 않고, 댓글 입력줄이 짧은 글에서도 하단에 붙는 것까지 확인.
+
+### 의사결정 배경
+- **FAB을 sticky/absolute로 바꾸지 않고 fixed로 남긴 이유**: sticky FAB은 콘텐츠가 짧을 때 화면 중앙에 뜨고, absolute FAB은 콘텐츠가 길 때 스크롤해야만 보이는 문제가 있다. "항상 화면 우하단에 떠 있는" 동작은 뷰포트 고정(fixed)이 정확한 도구다. 셸을 grid로 바꿔도 FAB의 `bottom-fab` 오프셋은 그대로 유효하다(탭바가 시각적으로 여전히 뷰포트 바닥에 있으므로).
+
 ## 2026-07-08 (v0.11.0)
 
 ### 변경 사항 — 안드로이드 PWA 단일화 (Capacitor/APK 완전 철거)

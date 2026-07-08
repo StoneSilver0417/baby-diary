@@ -30,7 +30,7 @@ export function FeedPage() {
     childId ? children.find((c) => c.id === childId)?.name : undefined
 
   return (
-    <div className="relative min-h-full">
+    <div className="relative min-h-full pb-20">
       <header className="sticky top-0 z-10 border-b border-border bg-background/95 px-5 pt-safe pb-4 backdrop-blur">
         <div className="flex items-start justify-between pt-4">
           <div>

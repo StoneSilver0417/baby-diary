@@ -61,7 +61,10 @@ export function EntryDetailPage() {
   }
 
   return (
-    <div className="min-h-full pt-safe">
+    // sticky-footer 패턴: 본문(1fr)이 짧아도 댓글 입력줄이 항상 하단에 붙도록 grid로 배치.
+    // 본문이 길면 컨테이너가 늘어나 main이 스크롤되고, 그때는 sticky bottom-0이 입력줄을 띄운다.
+    <div className="grid min-h-full grid-rows-[1fr_auto] pt-safe">
+      <div>
       <header className="flex items-center gap-2 border-b border-border p-4">
         <button onClick={goHome} aria-label="뒤로">
           <ChevronLeft className="size-5" />
@@ -158,6 +161,7 @@ export function EntryDetailPage() {
             <p className="text-sm text-muted-foreground">아직 댓글이 없어요.</p>
           )}
         </div>
+      </div>
       </div>
 
       <div className="sticky bottom-0 flex gap-2 border-t border-border bg-background p-4 pb-safe">

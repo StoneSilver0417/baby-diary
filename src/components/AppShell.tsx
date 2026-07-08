@@ -21,12 +21,14 @@ export function AppShell() {
 
   return (
     <SelectedChildProvider>
-      <div className="flex min-h-dvh flex-col bg-background">
-        <main className="flex-1 overflow-y-auto pb-nav">
+      {/* scroll-body-shell: 본문(main)만 스크롤하고 하단 탭바는 grid의 고정 행으로 둔다.
+         탭바를 fixed로 겹치지 않으므로 본문이 탭바에 가릴 일이 구조적으로 없다(수동 여백 불필요). */}
+      <div className="grid h-dvh grid-rows-[minmax(0,1fr)_auto] bg-background">
+        <main className="min-h-0 overflow-y-auto">
           <IosInstallBanner />
           <Outlet />
         </main>
-        <nav className="fixed inset-x-0 bottom-0 border-t border-border bg-card pb-safe">
+        <nav className="border-t border-border bg-card pb-safe">
           <div className="mx-auto flex max-w-md gap-1 px-2 py-1.5">
             {tabs.map(({ to, label, icon: Icon, prefixes }) => {
               const active = isTabActive(pathname, prefixes)

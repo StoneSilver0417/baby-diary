@@ -84,7 +84,7 @@ export function InvestPage() {
   ].sort((a, b) => b.date.localeCompare(a.date))
 
   return (
-    <div className="min-h-full pt-safe">
+    <div className="min-h-full pt-safe pb-20">
       <header className="space-y-3 p-5">
         <h1 className="text-xl font-semibold text-foreground">{child?.name} 투자일기</h1>
         <ChildSwitcher />

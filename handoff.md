@@ -2,13 +2,14 @@
 
 ## 현재 상태
 
-- **버전**: v0.11.0 (안드로이드 PWA 단일화 — Capacitor/APK 완전 철거)
-- **빌드 상태**: `npx tsc --noEmit` 통과, `npm run build` 통과. `npm install`로 lockfile 갱신 완료.
+- **버전**: v0.11.1 (앱 셸을 scroll-body-shell grid 구조로 리팩터)
+- **빌드 상태**: `npx tsc --noEmit` 통과, `npm run build` 통과.
 - **배포 상태**: 웹은 push로 자동 배포. GitHub Release `android-latest`는 안내문으로 교체(APK 파일 제거). 안드로이드도 아이폰과 동일하게 PWA 단일 경로.
 - **실행 방법/URL**: 웹 https://baby-diary-tau.vercel.app (안드로이드는 Chrome에서 접속 후 "홈 화면에 추가"·"앱 설치", `README.md` 참고) / 로컬 `npm run dev`(`.env.local`의 `VITE_USE_MOCK=false`, 실 Supabase 연결).
 
 ## 최근 작업
 
+- **앱 셸 레이아웃 리팩터 (v0.11.1)**: StyleGallery(CSS 레이아웃 패턴 카탈로그) 참고. `AppShell`의 하단 탭바를 `fixed`+`pb-nav`(매직넘버 여백) 방식에서 **scroll-body-shell grid**(`grid-rows-[minmax(0,1fr)_auto] h-dvh`)로 전환 — 탭바가 grid 실제 행이 되어 콘텐츠가 탭바에 가리는 게 구조적으로 불가능해지고 매직넘버 제거. FAB은 fixed 유지(정석), FAB 화면 3개에만 `pb-20` 여백. 덤으로 EntryDetail 댓글 입력줄에 sticky-footer 패턴(`grid-rows-[1fr_auto]`) 적용해 짧은 글에서 입력줄이 중앙에 뜨던 기존 문제도 해결. Playwright로 짧은 글/긴 글 스크롤 전부 검증.
 - **안드로이드 PWA 단일화 — Capacitor/APK 완전 철거 (v0.11.0)**: v0.10.4부터 미뤄온 결정 실행. Capacitor 코드 의존은 `useAndroidBackButton.ts` 1개뿐이라 핵심은 **뒤로가기 훅의 popstate 재구현**이었음.
   - **"홈 앵커 불변식" 설계**: 히스토리 스택을 항상 `['/']` 또는 `['/', 현재화면]`(깊이 2 이하)로 유지 — 비홈→비홈 이동은 `AppLink`/`navigate(...,{replace:true})`로 처리해 스택이 안 쌓이게 하고, 홈으로 가는 이동은 `useGoHome()`이 앵커로 `pop`. 이러면 "비홈에서 백=홈"은 라우터 네이티브 pop으로, "홈에서 백=앱 최소화"는 스택 바닥이라 OS 기본 동작으로 재현됨(Capacitor 하드웨어 백버튼 없이). `src/lib/navigation.tsx`(AppLink·useGoHome), `src/lib/useBackNavigation.ts`(standalone 딥링크 정규화 + POP 안전망) 신설.
   - raw `pushState` 센티널 트랩 방식은 기각 — react-router(v8.1.0)가 `history.state.idx`로 스택을 추적하는데 raw push가 이를 오염시킴(소스 확인).

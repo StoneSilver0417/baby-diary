@@ -103,11 +103,9 @@
 @utility pt-safe {
   padding-top: env(safe-area-inset-top);
 }
-/* 하단 탭바(AppShell)의 실제 높이(콘텐츠+safe-area)만큼 스크롤 콘텐츠를 띄움 */
-@utility pb-nav {
-  padding-bottom: calc(5rem + env(safe-area-inset-bottom));
-}
-/* 하단 탭바 위에 떠 있는 FAB — safe-area가 큰 기기(제스처 내비 등)에서도 탭바에 가리지 않도록 */
+/* 하단 탭바 위에 떠 있는 FAB — safe-area가 큰 기기(제스처 내비 등)에서도 탭바에 가리지 않도록.
+   탭바는 이제 AppShell grid의 실제 한 칸이라 콘텐츠가 탭바에 가릴 일은 없고, 이 값은
+   '뷰포트에 고정된 FAB'을 탭바 위로 띄우기 위한 오프셋만 담당한다. */
 @utility bottom-fab {
   bottom: calc(6rem + env(safe-area-inset-bottom));
 }
