@@ -9,7 +9,7 @@
 
 ## 최근 작업
 
-- **댓글 수정 기능 추가 (v0.11.2)**: 본인 댓글에 연필 버튼 → 인라인 입력창(저장/취소)으로 수정. `updateComment` API + `useUpdateComment` 옵티미스틱 뮤테이션 + EntryDetailPage UI. **마이그레이션 0005(`comments_update_own` RLS)를 실 프로덕션 Supabase에 아직 적용 안 함 — 적용 전엔 실환경에서 댓글 수정이 RLS에 막힌다**(아래 "다음 TODO" 참고). Playwright(mock)로 UI·옵티미스틱 검증 완료.
+- **댓글 수정 기능 추가 (v0.11.2)**: 본인 댓글에 연필 버튼 → 인라인 입력창(저장/취소)으로 수정. `updateComment` API + `useUpdateComment` 옵티미스틱 뮤테이션 + EntryDetailPage UI. 마이그레이션 0005(`comments_update_own` RLS) 실 프로덕션 적용 완료 → 실환경 동작. Playwright(mock)로 UI·옵티미스틱 검증 완료.
 - **앱 셸 레이아웃 리팩터 (v0.11.1)**: StyleGallery(CSS 레이아웃 패턴 카탈로그) 참고. `AppShell`의 하단 탭바를 `fixed`+`pb-nav`(매직넘버 여백) 방식에서 **scroll-body-shell grid**(`grid-rows-[minmax(0,1fr)_auto] h-dvh`)로 전환 — 탭바가 grid 실제 행이 되어 콘텐츠가 탭바에 가리는 게 구조적으로 불가능해지고 매직넘버 제거. FAB은 fixed 유지(정석), FAB 화면 3개에만 `pb-20` 여백. 덤으로 EntryDetail 댓글 입력줄에 sticky-footer 패턴(`grid-rows-[1fr_auto]`) 적용해 짧은 글에서 입력줄이 중앙에 뜨던 기존 문제도 해결. Playwright로 짧은 글/긴 글 스크롤 전부 검증.
 - **안드로이드 PWA 단일화 — Capacitor/APK 완전 철거 (v0.11.0)**: v0.10.4부터 미뤄온 결정 실행. Capacitor 코드 의존은 `useAndroidBackButton.ts` 1개뿐이라 핵심은 **뒤로가기 훅의 popstate 재구현**이었음.
   - **"홈 앵커 불변식" 설계**: 히스토리 스택을 항상 `['/']` 또는 `['/', 현재화면]`(깊이 2 이하)로 유지 — 비홈→비홈 이동은 `AppLink`/`navigate(...,{replace:true})`로 처리해 스택이 안 쌓이게 하고, 홈으로 가는 이동은 `useGoHome()`이 앵커로 `pop`. 이러면 "비홈에서 백=홈"은 라우터 네이티브 pop으로, "홈에서 백=앱 최소화"는 스택 바닥이라 OS 기본 동작으로 재현됨(Capacitor 하드웨어 백버튼 없이). `src/lib/navigation.tsx`(AppLink·useGoHome), `src/lib/useBackNavigation.ts`(standalone 딥링크 정규화 + POP 안전망) 신설.
@@ -37,7 +37,7 @@
 
 ## 다음 TODO
 
-0. [ ] **마이그레이션 0005 실 프로덕션 적용** — 대시보드 SQL Editor에서 `supabase/migrations/0005_comment_update.sql` 실행(댓글 수정 RLS). 미적용 시 실환경에서 댓글 수정이 조용히 실패한다.
+0. [x] ~~마이그레이션 0005(`comments_update_own` RLS) 실 프로덕션 적용~~ — 완료(2026-07-08). 댓글 수정 실환경 동작.
 0. [ ] 위 "테스트 데이터 미정리" SQL 실행
 1. [ ] 와이프 아이폰 줄노트 배경선 미표시 재확인 (앱 완전 종료 후 재실행 결과 회신 대기 중)
 2. [ ] 실기기(안드로이드·아이폰) 재검증: **PWA 단일화 후 뒤로가기 동작**(하드웨어/제스처 백, 헤더 ←, 딥링크) + 다자녀 스위처·일기 대상 선택·새 앱 아이콘
