@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-07-08 (v0.11.2)
+
+### 변경 사항 — 댓글 수정 기능 추가
+기존에 댓글은 작성·삭제만 가능하고 수정이 없었다. 오타·내용 변경을 위해 본인 댓글 인라인 수정 기능을 추가.
+
+- **DB(마이그레이션 0005)**: `comments` 테이블에 select/insert/delete 정책만 있고 update 정책이 없어 본인 댓글도 RLS에 막혀 수정이 안 됐다. `comments_update_own` 정책 추가 — `using(author_id = auth.uid())` + `with check(author_id = auth.uid())`로 남의 댓글 수정도, 수정하며 작성자를 바꾸는 것도 차단. **실 프로덕션 반영 필요**: 대시보드 SQL Editor에서 `supabase/migrations/0005_comment_update.sql` 실행.
+- **API/mutation**: `updateComment(commentId, entryId, content)` 추가(mock + supabase), `useUpdateComment` 옵티미스틱 뮤테이션 추가(기존 addComment/deleteComment와 동일 패턴 — onMutate에서 캐시 즉시 반영, 실패 시 롤백, onSettled에서 invalidate).
+- **UI(EntryDetailPage)**: 본인 댓글에만 연필(수정) 버튼을 삭제 버튼과 함께 노출. 누르면 해당 댓글이 인라인 입력창으로 바뀌고 체크(저장)·X(취소) 버튼 제공. Enter=저장, Esc=취소, 빈 내용은 저장 비활성화. 다른 사람 댓글에는 버튼 미노출.
+- **검증**: Playwright(iPhone 뷰포트)로 본인 댓글에만 수정 버튼 노출·인라인 편집·저장 옵티미스틱 반영·취소 시 원문 유지까지 확인.
+
 ## 2026-07-08 (v0.11.1)
 
 ### 변경 사항 — 앱 셸 레이아웃을 scroll-body-shell 구조로 리팩터

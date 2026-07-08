@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { format } from 'date-fns'
-import { ChevronLeft, Heart, Pencil, Trash2, X } from 'lucide-react'
+import { Check, ChevronLeft, Heart, Pencil, Trash2, X } from 'lucide-react'
 import { useAuth } from '@/features/auth/AuthProvider'
 import { useSelectedChild } from '@/features/shared/SelectedChildProvider'
 import { Badge } from '@/components/ui/badge'
@@ -19,7 +19,13 @@ import {
 import { cn } from '@/lib/utils'
 import { AppLink, useGoHome } from '@/lib/navigation'
 import { useEntry, useProfiles } from './useDiaryQueries'
-import { useAddComment, useDeleteComment, useDeleteEntry, useToggleLike } from './useDiaryMutations'
+import {
+  useAddComment,
+  useDeleteComment,
+  useDeleteEntry,
+  useToggleLike,
+  useUpdateComment,
+} from './useDiaryMutations'
 import { EntryPhotos } from './EntryPhotos'
 
 export function EntryDetailPage() {
@@ -33,8 +39,11 @@ export function EntryDetailPage() {
   const toggleLike = useToggleLike(userId ?? '')
   const addComment = useAddComment(userId ?? '')
   const deleteComment = useDeleteComment()
+  const updateComment = useUpdateComment()
   const deleteEntry = useDeleteEntry()
   const [commentText, setCommentText] = useState('')
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editText, setEditText] = useState('')
 
   if (isLoading || !entry) {
     return <div className="p-5 text-sm text-muted-foreground">불러오는 중…</div>
@@ -49,6 +58,23 @@ export function EntryDetailPage() {
     if (!commentText.trim() || !id) return
     addComment.mutate({ entryId: id, content: commentText })
     setCommentText('')
+  }
+
+  function startEdit(commentId: string, current: string) {
+    setEditingId(commentId)
+    setEditText(current)
+  }
+
+  function cancelEdit() {
+    setEditingId(null)
+    setEditText('')
+  }
+
+  function handleSaveEdit(commentId: string) {
+    const next = editText.trim()
+    if (!id || !next) return
+    updateComment.mutate({ commentId, entryId: id, content: next })
+    cancelEdit()
   }
 
   function handleDeleteEntry() {
@@ -139,26 +165,69 @@ export function EntryDetailPage() {
         </button>
 
         <div className="mt-6 space-y-3 font-hand">
-          {entry.comments.map((comment) => (
-            <div key={comment.id} className="flex items-start gap-2 text-base">
-              <div className="flex-1">
-                <div className="text-sm font-medium text-muted-foreground">
-                  {authorOf(comment.author_id)}
+          {entry.comments.map((comment) => {
+            const isMine = comment.author_id === userId && !!id
+            const isEditing = editingId === comment.id
+            return (
+              <div key={comment.id} className="flex items-start gap-2 text-base">
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-muted-foreground">
+                    {authorOf(comment.author_id)}
+                  </div>
+                  {isEditing ? (
+                    <div className="mt-1 flex gap-2">
+                      <Input
+                        autoFocus
+                        value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleSaveEdit(comment.id)
+                          if (e.key === 'Escape') cancelEdit()
+                        }}
+                      />
+                      <button
+                        type="button"
+                        aria-label="수정 저장"
+                        className="shrink-0 text-primary disabled:opacity-40"
+                        disabled={!editText.trim()}
+                        onClick={() => handleSaveEdit(comment.id)}
+                      >
+                        <Check className="size-5" />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="수정 취소"
+                        className="shrink-0 text-muted-foreground"
+                        onClick={cancelEdit}
+                      >
+                        <X className="size-5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="whitespace-pre-wrap text-foreground">{comment.content}</p>
+                  )}
                 </div>
-                <p className="whitespace-pre-wrap text-foreground">{comment.content}</p>
+                {isMine && !isEditing && (
+                  <div className="mt-0.5 flex shrink-0 items-center gap-2 text-muted-foreground">
+                    <button
+                      type="button"
+                      aria-label="댓글 수정"
+                      onClick={() => startEdit(comment.id, comment.content)}
+                    >
+                      <Pencil className="size-4" />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="댓글 삭제"
+                      onClick={() => deleteComment.mutate({ commentId: comment.id, entryId: id })}
+                    >
+                      <X className="size-4" />
+                    </button>
+                  </div>
+                )}
               </div>
-              {comment.author_id === userId && id && (
-                <button
-                  type="button"
-                  aria-label="댓글 삭제"
-                  className="mt-0.5 text-muted-foreground"
-                  onClick={() => deleteComment.mutate({ commentId: comment.id, entryId: id })}
-                >
-                  <X className="size-4" />
-                </button>
-              )}
-            </div>
-          ))}
+            )
+          })}
           {entry.comments.length === 0 && (
             <p className="text-sm text-muted-foreground">아직 댓글이 없어요.</p>
           )}

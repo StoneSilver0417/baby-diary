@@ -286,6 +286,22 @@ export async function deleteComment(commentId: string, entryId: string): Promise
   if (error) throw error
 }
 
+export async function updateComment(
+  commentId: string,
+  entryId: string,
+  content: string,
+): Promise<void> {
+  if (useMock) {
+    await delay(80)
+    const entry = mockState.entries.find((e) => e.id === entryId)
+    const comment = entry?.comments.find((c) => c.id === commentId)
+    if (comment) comment.content = content
+    return
+  }
+  const { error } = await supabase.from('comments').update({ content }).eq('id', commentId)
+  if (error) throw error
+}
+
 export async function updateLastSeen(userId: string, at: string): Promise<void> {
   if (useMock) {
     const profile = mockState.profiles.find((p) => p.id === userId)

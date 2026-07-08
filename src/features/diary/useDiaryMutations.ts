@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { queryKeys } from '@/lib/queryClient'
 import type { DiaryEntry } from '@/types/database'
-import { addComment, deleteComment, deleteEntry, saveEntry, toggleLike } from './api'
+import { addComment, deleteComment, saveEntry, toggleLike, deleteEntry, updateComment } from './api'
 
 export function useSaveEntry() {
   const queryClient = useQueryClient()
@@ -47,6 +47,44 @@ export function useDeleteComment() {
       if (!ctx) return
       queryClient.setQueryData(queryKeys.entry(ctx.entryId), ctx.prevEntry)
       toast.error('댓글 삭제에 실패했습니다.')
+    },
+    onSettled: (_data, _err, { entryId }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.entry(entryId) })
+    },
+  })
+}
+
+export function useUpdateComment() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      commentId,
+      entryId,
+      content,
+    }: {
+      commentId: string
+      entryId: string
+      content: string
+    }) => updateComment(commentId, entryId, content),
+    onMutate: async ({ commentId, entryId, content }) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.entry(entryId) })
+      const prevEntry = queryClient.getQueryData<DiaryEntry>(queryKeys.entry(entryId))
+      queryClient.setQueryData<DiaryEntry>(queryKeys.entry(entryId), (old) =>
+        old
+          ? {
+              ...old,
+              comments: old.comments.map((c) =>
+                c.id === commentId ? { ...c, content } : c,
+              ),
+            }
+          : old,
+      )
+      return { prevEntry, entryId }
+    },
+    onError: (_err, _vars, ctx) => {
+      if (!ctx) return
+      queryClient.setQueryData(queryKeys.entry(ctx.entryId), ctx.prevEntry)
+      toast.error('댓글 수정에 실패했습니다.')
     },
     onSettled: (_data, _err, { entryId }) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.entry(entryId) })
