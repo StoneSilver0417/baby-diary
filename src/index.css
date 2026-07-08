@@ -114,12 +114,16 @@
 
 /* 그림일기 장식 유틸 (일기 탭 전용) */
 @utility paper-lines {
+  /* 반복 주기는 마지막 정지점으로 결정된다. 1px 선을 1.6rem 뒤에 붙이면
+     주기가 1.6rem + 1px가 되어 텍스트 줄 높이(1.6rem)와 한 줄마다 1px씩
+     어긋남이 누적된다(긴 글일수록 심해짐). 선을 주기 안쪽 끝에 그려
+     주기를 정확히 1.6rem으로 유지한다. */
   background-image: repeating-linear-gradient(
     to bottom,
     transparent,
-    transparent 1.6rem,
-    var(--paper-line) 1.6rem,
-    var(--paper-line) calc(1.6rem + 1px)
+    transparent calc(1.6rem - 1px),
+    var(--paper-line) calc(1.6rem - 1px),
+    var(--paper-line) 1.6rem
   );
   background-position: 0 0rem;
 }
