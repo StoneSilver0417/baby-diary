@@ -2,13 +2,14 @@
 
 ## 현재 상태
 
-- **버전**: v0.11.2 (댓글 수정 기능 추가)
+- **버전**: v0.11.3 (댓글 입력 자동 높이 textarea)
 - **빌드 상태**: `npx tsc --noEmit` 통과, `npm run build` 통과.
 - **배포 상태**: 웹은 push로 자동 배포. GitHub Release `android-latest`는 안내문으로 교체(APK 파일 제거). 안드로이드도 아이폰과 동일하게 PWA 단일 경로.
 - **실행 방법/URL**: 웹 https://baby-diary-tau.vercel.app (안드로이드는 Chrome에서 접속 후 "홈 화면에 추가"·"앱 설치", `README.md` 참고) / 로컬 `npm run dev`(`.env.local`의 `VITE_USE_MOCK=false`, 실 Supabase 연결).
 
 ## 최근 작업
 
+- **댓글 입력 자동 높이 textarea (v0.11.3)**: 댓글이 길어지면 단일 줄 Input에서 가로 스크롤되던 문제 해결. `AutoGrowTextarea`(scrollHeight 기반 세로 자동 확장, iOS field-sizing 미지원 대응, 최대 `max-h-32` 후 내부 스크롤) 신설해 댓글 작성창·인라인 수정창에 적용. Enter=줄바꿈, 등록/저장은 버튼. Playwright 검증 완료.
 - **댓글 수정 기능 추가 (v0.11.2)**: 본인 댓글에 연필 버튼 → 인라인 입력창(저장/취소)으로 수정. `updateComment` API + `useUpdateComment` 옵티미스틱 뮤테이션 + EntryDetailPage UI. 마이그레이션 0005(`comments_update_own` RLS) 실 프로덕션 적용 완료 → 실환경 동작. Playwright(mock)로 UI·옵티미스틱 검증 완료.
 - **앱 셸 레이아웃 리팩터 (v0.11.1)**: StyleGallery(CSS 레이아웃 패턴 카탈로그) 참고. `AppShell`의 하단 탭바를 `fixed`+`pb-nav`(매직넘버 여백) 방식에서 **scroll-body-shell grid**(`grid-rows-[minmax(0,1fr)_auto] h-dvh`)로 전환 — 탭바가 grid 실제 행이 되어 콘텐츠가 탭바에 가리는 게 구조적으로 불가능해지고 매직넘버 제거. FAB은 fixed 유지(정석), FAB 화면 3개에만 `pb-20` 여백. 덤으로 EntryDetail 댓글 입력줄에 sticky-footer 패턴(`grid-rows-[1fr_auto]`) 적용해 짧은 글에서 입력줄이 중앙에 뜨던 기존 문제도 해결. Playwright로 짧은 글/긴 글 스크롤 전부 검증.
 - **안드로이드 PWA 단일화 — Capacitor/APK 완전 철거 (v0.11.0)**: v0.10.4부터 미뤄온 결정 실행. Capacitor 코드 의존은 `useAndroidBackButton.ts` 1개뿐이라 핵심은 **뒤로가기 훅의 popstate 재구현**이었음.

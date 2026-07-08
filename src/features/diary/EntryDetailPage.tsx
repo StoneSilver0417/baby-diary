@@ -6,7 +6,7 @@ import { useAuth } from '@/features/auth/AuthProvider'
 import { useSelectedChild } from '@/features/shared/SelectedChildProvider'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { AutoGrowTextarea } from '@/components/AutoGrowTextarea'
 import {
   Dialog,
   DialogClose,
@@ -175,20 +175,19 @@ export function EntryDetailPage() {
                     {authorOf(comment.author_id)}
                   </div>
                   {isEditing ? (
-                    <div className="mt-1 flex gap-2">
-                      <Input
+                    <div className="mt-1 flex items-end gap-2">
+                      <AutoGrowTextarea
                         autoFocus
                         value={editText}
                         onChange={(e) => setEditText(e.target.value)}
                         onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleSaveEdit(comment.id)
                           if (e.key === 'Escape') cancelEdit()
                         }}
                       />
                       <button
                         type="button"
                         aria-label="수정 저장"
-                        className="shrink-0 text-primary disabled:opacity-40"
+                        className="mb-1 shrink-0 text-primary disabled:opacity-40"
                         disabled={!editText.trim()}
                         onClick={() => handleSaveEdit(comment.id)}
                       >
@@ -197,7 +196,7 @@ export function EntryDetailPage() {
                       <button
                         type="button"
                         aria-label="수정 취소"
-                        className="shrink-0 text-muted-foreground"
+                        className="mb-1 shrink-0 text-muted-foreground"
                         onClick={cancelEdit}
                       >
                         <X className="size-5" />
@@ -235,14 +234,17 @@ export function EntryDetailPage() {
       </div>
       </div>
 
-      <div className="sticky bottom-0 flex gap-2 border-t border-border bg-background p-4 pb-safe">
-        <Input
+      <div className="sticky bottom-0 flex items-end gap-2 border-t border-border bg-background p-4 pb-safe">
+        <AutoGrowTextarea
           value={commentText}
           onChange={(e) => setCommentText(e.target.value)}
           placeholder="댓글을 남겨보세요"
-          onKeyDown={(e) => e.key === 'Enter' && handleSubmitComment()}
         />
-        <Button onClick={handleSubmitComment} disabled={!commentText.trim()}>
+        <Button
+          onClick={handleSubmitComment}
+          disabled={!commentText.trim()}
+          className="shrink-0"
+        >
           등록
         </Button>
       </div>
