@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useAuth } from '@/features/auth/AuthProvider'
@@ -12,6 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
+import { AppLink } from '@/lib/navigation'
 import type { Child, Invite } from '@/types/database'
 import { addChild, createInquiry, createInvite, getMyInquiries, updateChild, updateDisplayName } from './api'
 
@@ -90,12 +90,12 @@ export function SettingsPage() {
       {isAdmin && (
         <>
           <Separator />
-          <Link
+          <AppLink
             to="/admin"
             className="block text-center text-sm text-muted-foreground underline underline-offset-2"
           >
             관리자 페이지
-          </Link>
+          </AppLink>
         </>
       )}
 

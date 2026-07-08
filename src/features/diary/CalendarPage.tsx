@@ -44,7 +44,7 @@ export function CalendarPage() {
   function handleDayClick(day: Date) {
     const list = entriesByDate.get(format(day, 'yyyy-MM-dd')) ?? []
     if (list.length === 1) {
-      navigate(`/entry/${list[0].id}`)
+      navigate(`/entry/${list[0].id}`, { replace: true })
     } else if (list.length > 1) {
       setSelected(day)
     } else {
@@ -109,7 +109,7 @@ export function CalendarPage() {
             {selectedEntries.map((entry) => (
               <button
                 key={entry.id}
-                onClick={() => navigate(`/entry/${entry.id}`)}
+                onClick={() => navigate(`/entry/${entry.id}`, { replace: true })}
                 className="block w-full rounded-lg border border-border p-3 text-left"
               >
                 <span className="text-sm font-medium text-foreground">{entry.authorName}</span>

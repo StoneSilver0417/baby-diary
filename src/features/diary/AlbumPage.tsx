@@ -38,7 +38,7 @@ export function AlbumPage() {
             return (
               <button
                 key={`${photo.entryId}-${i}`}
-                onClick={() => navigate(`/entry/${photo.entryId}`)}
+                onClick={() => navigate(`/entry/${photo.entryId}`, { replace: true })}
                 className={cn(
                   'polaroid aspect-square overflow-hidden',
                   i % 2 === 0 ? 'polaroid-tilt-left' : 'polaroid-tilt-right',

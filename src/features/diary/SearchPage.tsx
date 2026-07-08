@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router'
 import { format } from 'date-fns'
 import { ChevronLeft } from 'lucide-react'
 import { Input } from '@/components/ui/input'
+import { AppLink, useGoHome } from '@/lib/navigation'
 import { useFeed } from './useDiaryQueries'
 
 export function SearchPage() {
-  const navigate = useNavigate()
+  const goHome = useGoHome()
   const { data: feed } = useFeed()
   const [query, setQuery] = useState('')
 
@@ -23,7 +23,7 @@ export function SearchPage() {
   return (
     <div className="min-h-full">
       <header className="flex items-center gap-2 border-b border-border p-4 pt-safe">
-        <button onClick={() => navigate(-1)} aria-label="뒤로">
+        <button onClick={goHome} aria-label="뒤로">
           <ChevronLeft className="size-5" />
         </button>
         <Input
@@ -39,7 +39,7 @@ export function SearchPage() {
           <p className="p-8 text-center text-sm text-muted-foreground">검색 결과가 없어요.</p>
         )}
         {results.map((entry) => (
-          <Link key={entry.id} to={`/entry/${entry.id}`} className="block p-5">
+          <AppLink key={entry.id} to={`/entry/${entry.id}`} className="block p-5">
             <div className="mb-1 flex items-center gap-2">
               <span className="text-sm font-medium text-foreground">{entry.authorName}</span>
               <span className="text-xs text-muted-foreground">
@@ -47,7 +47,7 @@ export function SearchPage() {
               </span>
             </div>
             <p className="line-clamp-2 text-sm text-muted-foreground">{entry.content}</p>
-          </Link>
+          </AppLink>
         ))}
       </div>
     </div>

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router'
+import { useSearchParams } from 'react-router'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
 import { X } from 'lucide-react'
@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { pickPhotos } from '@/lib/photoPicker'
+import { useGoHome } from '@/lib/navigation'
 import { cn } from '@/lib/utils'
 import { getEntryByDate } from './api'
 import { useSaveEntry } from './useDiaryMutations'
@@ -23,7 +24,7 @@ export function EntryEditorPage() {
   const myProfile = useMyProfile()
   const householdId = useHouseholdId()
   const { children } = useSelectedChild()
-  const navigate = useNavigate()
+  const goHome = useGoHome()
   const [searchParams] = useSearchParams()
   const saveEntry = useSaveEntry()
 
@@ -102,7 +103,7 @@ export function EntryEditorPage() {
         newPhotos,
       })
       toast.success('저장했어요.')
-      navigate('/')
+      goHome()
     } catch {
       // useSaveEntry의 onError 토스트로 처리됨
     }

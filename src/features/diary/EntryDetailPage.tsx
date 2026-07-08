@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 import { format } from 'date-fns'
 import { ChevronLeft, Heart, Pencil, Trash2, X } from 'lucide-react'
 import { useAuth } from '@/features/auth/AuthProvider'
@@ -17,6 +17,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
+import { AppLink, useGoHome } from '@/lib/navigation'
 import { useEntry, useProfiles } from './useDiaryQueries'
 import { useAddComment, useDeleteComment, useDeleteEntry, useToggleLike } from './useDiaryMutations'
 import { EntryPhotos } from './EntryPhotos'
@@ -24,6 +25,7 @@ import { EntryPhotos } from './EntryPhotos'
 export function EntryDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const goHome = useGoHome()
   const { userId } = useAuth()
   const { data: entry, isLoading } = useEntry(id)
   const { data: profiles } = useProfiles()
@@ -61,7 +63,7 @@ export function EntryDetailPage() {
   return (
     <div className="min-h-full pt-safe">
       <header className="flex items-center gap-2 border-b border-border p-4">
-        <button onClick={() => navigate(-1)} aria-label="뒤로">
+        <button onClick={goHome} aria-label="뒤로">
           <ChevronLeft className="size-5" />
         </button>
         <span className="font-hand text-lg font-medium">
@@ -74,9 +76,9 @@ export function EntryDetailPage() {
         )}
         {isMyEntry && (
           <div className="ml-auto flex items-center gap-3">
-            <Link to={`/write?date=${entry.entry_date}`} className="text-muted-foreground" aria-label="일기 수정">
+            <AppLink to={`/write?date=${entry.entry_date}`} className="text-muted-foreground" aria-label="일기 수정">
               <Pencil className="size-5" />
-            </Link>
+            </AppLink>
             <Dialog>
               <DialogTrigger asChild>
                 <button className="text-muted-foreground" aria-label="일기 삭제">

@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { Link } from 'react-router'
 import { ChevronLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { AppLink } from '@/lib/navigation'
 import type { InquiryWithAuthor } from './api'
 import { useAdminStats, useAllInquiries, useReplyInquiry } from './useAdminQueries'
 
@@ -14,9 +14,9 @@ export function AdminPage() {
   return (
     <div className="min-h-full p-5 pt-safe">
       <header className="mb-5 flex items-center gap-2">
-        <Link to="/settings" aria-label="뒤로">
+        <AppLink to="/settings" aria-label="뒤로">
           <ChevronLeft className="size-5" />
-        </Link>
+        </AppLink>
         <h1 className="text-lg font-semibold text-foreground">관리자</h1>
       </header>
 

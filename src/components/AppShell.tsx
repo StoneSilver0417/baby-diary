@@ -1,6 +1,7 @@
-import { Link, Outlet, useLocation } from 'react-router'
+import { Outlet, useLocation } from 'react-router'
 import { BookHeart, LineChart, Ruler, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { AppLink } from '@/lib/navigation'
 import { IosInstallBanner } from '@/components/IosInstallBanner'
 import { SelectedChildProvider } from '@/features/shared/SelectedChildProvider'
 
@@ -30,7 +31,7 @@ export function AppShell() {
             {tabs.map(({ to, label, icon: Icon, prefixes }) => {
               const active = isTabActive(pathname, prefixes)
               return (
-                <Link
+                <AppLink
                   key={to}
                   to={to}
                   className={cn(
@@ -42,7 +43,7 @@ export function AppShell() {
                 >
                   <Icon className="size-5" />
                   {label}
-                </Link>
+                </AppLink>
               )
             })}
           </div>

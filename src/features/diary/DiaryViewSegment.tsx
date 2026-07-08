@@ -1,5 +1,6 @@
-import { Link, useLocation } from 'react-router'
+import { useLocation } from 'react-router'
 import { cn } from '@/lib/utils'
+import { AppLink } from '@/lib/navigation'
 
 const views = [
   { to: '/', label: '피드' },
@@ -16,7 +17,7 @@ export function DiaryViewSegment() {
       {views.map(({ to, label }) => {
         const active = to === '/' ? pathname === '/' : pathname.startsWith(to)
         return (
-          <Link
+          <AppLink
             key={to}
             to={to}
             className={cn(
@@ -25,7 +26,7 @@ export function DiaryViewSegment() {
             )}
           >
             {label}
-          </Link>
+          </AppLink>
         )
       })}
     </div>

@@ -9,7 +9,7 @@ import {
 } from '@/components/ProtectedRoute'
 import { AppShell } from '@/components/AppShell'
 import { SplashScreen } from '@/components/SplashScreen'
-import { useAndroidBackButton } from '@/lib/useAndroidBackButton'
+import { useBackNavigation } from '@/lib/useBackNavigation'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { FeedPage } from '@/features/diary/FeedPage'
 import { EntryEditorPage } from '@/features/diary/EntryEditorPage'
@@ -42,7 +42,7 @@ const AdminPage = lazy(() =>
 )
 
 function App() {
-  useAndroidBackButton()
+  useBackNavigation()
 
   return (
     <Suspense fallback={<SplashScreen />}>

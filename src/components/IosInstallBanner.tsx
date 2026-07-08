@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 import { Star } from '@/assets/doodles'
+import { isStandaloneDisplay } from '@/lib/pwa'
 
 const DISMISS_KEY = 'baby-diary-ios-banner-dismissed'
 
@@ -8,19 +9,12 @@ function isIos() {
   return /iPad|iPhone|iPod/.test(navigator.userAgent)
 }
 
-function isStandalone() {
-  return (
-    window.matchMedia('(display-mode: standalone)').matches ||
-    (navigator as unknown as { standalone?: boolean }).standalone === true
-  )
-}
-
 /** 아이폰은 네이티브 앱 배포가 불가능해 PWA 홈화면 추가가 유일한 설치 경로 — 안내 배너로 유도 */
 export function IosInstallBanner() {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    if (isIos() && !isStandalone() && !localStorage.getItem(DISMISS_KEY)) {
+    if (isIos() && !isStandaloneDisplay() && !localStorage.getItem(DISMISS_KEY)) {
       setVisible(true)
     }
   }, [])

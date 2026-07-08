@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-07-08 (v0.11.0)
+
+### 변경 사항 — 안드로이드 PWA 단일화 (Capacitor/APK 완전 철거)
+v0.10.4에서 논의만 하고 미뤄뒀던 결정을 실행. Capacitor 디버그 APK를 GitHub Release로 병행 배포하던 방식은 릴리스마다 `cap sync → gradlew → gh release upload` 수동 3단계가 필요했고, 무엇보다 이미 APK를 설치한 사용자는 앱 자체가 웹 자산을 번들하고 있어 자동 업데이트가 되지 않는 구조적 문제가 있었다. 안드로이드도 아이폰과 동일하게 PWA 단일 경로로 통일해 배포를 웹 push 한 번으로 끝낸다.
+
+- **코드 의존 조사**: Capacitor를 실제로 import하는 소스는 `src/lib/useAndroidBackButton.ts` 단 1개뿐이었고, PWA 인프라(vite-plugin-pwa manifest·아이콘·iOS 설치 배너)는 이미 완비돼 있어 실질 작업은 이 훅의 재구현과 철거·문서 정리로 좁혀짐.
+- **뒤로가기 재구현 — "홈 앵커 불변식"**: 기존 Capacitor 하드웨어 백버튼의 고정 규칙("피드가 아니면 무조건 피드로, 피드에서는 앱 종료")을 웹 표준 history API만으로 재현해야 했다. "홈에서 백=앱 최소화"는 히스토리 스택이 바닥일 때만 OS가 해주는 동작이라, 스택을 항상 `['/']` 또는 `['/', 현재화면]`(깊이 2 이하)로 유지하는 불변식을 설계했다:
+  - `src/lib/navigation.tsx`: `AppLink`(비홈→비홈 이동은 자동 `replace`, 홈으로 가는 이동은 `useGoHome`에 위임)와 `useGoHome()`(히스토리에 앵커가 있으면 `navigate(-1)`로 pop, 없으면 `replace`)을 신설.
+  - `src/lib/useBackNavigation.ts`: 두 가지 보조 역할만 담당하는 안전망. ① standalone PWA로 딥링크 진입 시 히스토리 바닥에 홈 앵커를 끼워 넣는 정규화(브라우저 탭 딥링크는 "공유받은 곳으로 돌아가기" 기대를 지키려 대상에서 제외), ② 뒤로 방향 POP이 비홈에 착지하면 홈으로 교정하는 안전망(네비게이션 규율이 지켜지는 한 발동하지 않음).
+  - raw `history.pushState` 센티널 트랩 방식은 기각했다 — react-router(v8.1.0) 소스를 확인해보니 라우터가 `history.state.idx`로 자체 스택 인덱스를 추적하는데, 규약 밖에서 직접 `pushState`를 호출하면 이 인덱스가 오염돼(다음 push에서 `undefined + 1 = NaN`) 라우터 내비게이션이 깨졌다.
+  - AppShell 하단 탭, DiaryViewSegment, EntryDetailPage/SearchPage 헤더 ←, EntryEditorPage 저장 후 이동, Calendar/AlbumPage, Settings↔AdminPage 등 네비게이션 표면 전체에 규율을 적용.
+- **UX 변경(확정)**: 상세·검색 화면의 헤더 ← 버튼이 "직전 화면"이 아닌 "홈"으로 이동하도록 통일 — 하드웨어 백과 동작을 일치시키는 선택.
+- **Capacitor 철거**: `@capacitor/android`·`@capacitor/app`·`@capacitor/core`·`@capacitor/assets`·`@capacitor/cli` 의존성 5종 제거, `capacitor.config.ts`·`android/`(추적 파일 77개)·`assets/`(icon·splash 소스) 삭제, `scripts/generate-icons.mjs`의 Capacitor 자산 생성 블록 제거(웹 아이콘 생성부는 유지).
+- **검증**: Playwright로 8가지 시나리오(불변식 유지, 비홈→백=홈, 홈→백=이탈, 헤더←=홈, standalone 딥링크 정규화, 새로고침 멱등, 로그인 리다이렉트 무경합)를 dev 서버와 `vite preview`(실제 프로덕션 빌드) 양쪽에서 확인.
+- GitHub Release `android-latest`의 APK 자산을 제거하고 "PWA로 전환됨" 안내문으로 교체, README 방법 B(APK 설치) 섹션 삭제 + 갈아타기 안내 추가, AGENTS.md의 Capacitor/APK 관련 서술 정리.
+
+### 의사결정 배경
+- **왜 "히스토리 스택 얕게 유지" 설계를 택했는가**: 대안으로 raw popstate 이벤트에서 즉석으로 판단하는 방식도 검토했으나, popstate 시점엔 location이 이미 새 엔트리로 바뀐 뒤라 타이밍이 꼬이기 쉽고, 무엇보다 "히스토리를 되짚으며 탭 전환 기록을 왔다갔다"하는 문제(과거 v0.9.x에서 겪고 폐기한 문제)가 재발할 위험이 있었다. 대신 애초에 스택이 깊어지지 않도록 모든 네비게이션 지점에서 규율을 지키면, 뒤로가기 자체는 라우터 표준 동작만으로 해결되고 커스텀 훅은 "규율이 깨졌을 때만 발동하는 안전망" 역할로 줄어든다 — 더 적은 코드로 더 예측 가능한 동작.
+- **APK 파일을 완전히 지우고 안내문으로 교체한 이유**: 기존 설치자를 방치하면 구버전에 고착된 채로 있게 되는데, 어차피 자동 업데이트가 안 되는 배포 방식이었으니 유지보수 부담만 남기고 실익이 없다고 판단. Release 자체를 삭제하지 않고 안내문으로 남긴 이유는 기존에 이 링크를 북마크했거나 공유받은 사람이 갑자기 404를 마주치지 않고 PWA로 갈아타는 경로를 바로 안내받게 하기 위함.
+
 ## 2026-07-08 (v0.10.7)
 
 ### 변경 사항 — 줄노트 배경 반복 주기의 1px 누적 오차 수정 (긴 글에서 어긋남)

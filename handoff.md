@@ -2,29 +2,33 @@
 
 ## 현재 상태
 
-- **버전**: v0.10.7 (줄노트 1px 누적 오차 수정)
-- **빌드 상태**: `npx tsc --noEmit` 통과, `npm run build` 통과. 안드로이드 디버그 APK 재빌드 및 GitHub Release(`android-latest`) 업로드 완료.
-- **배포 상태**: 웹·안드로이드 모두 실 프로덕션에서 회원가입→온보딩→초대→다자녀→일기대상→문의→관리자 답변까지 E2E 검증 완료. 마이그레이션 0004·대시보드 이메일 가입 설정 모두 적용 완료. GitHub 저장소는 Public 전환 완료(APK 로그인 없이 다운로드 가능).
-- **실행 방법/URL**: 웹 https://baby-diary-tau.vercel.app / 안드로이드 https://github.com/StoneSilver0417/baby-diary/releases/tag/android-latest (PWA 설치도 가능, `README.md` 참고) / 로컬 `npm run dev`(`.env.local`의 `VITE_USE_MOCK=false`, 실 Supabase 연결).
+- **버전**: v0.11.0 (안드로이드 PWA 단일화 — Capacitor/APK 완전 철거)
+- **빌드 상태**: `npx tsc --noEmit` 통과, `npm run build` 통과. `npm install`로 lockfile 갱신 완료.
+- **배포 상태**: 웹은 push로 자동 배포. GitHub Release `android-latest`는 안내문으로 교체(APK 파일 제거). 안드로이드도 아이폰과 동일하게 PWA 단일 경로.
+- **실행 방법/URL**: 웹 https://baby-diary-tau.vercel.app (안드로이드는 Chrome에서 접속 후 "홈 화면에 추가"·"앱 설치", `README.md` 참고) / 로컬 `npm run dev`(`.env.local`의 `VITE_USE_MOCK=false`, 실 Supabase 연결).
 
 ## 최근 작업
 
-- **줄노트 1px 누적 오차 수정 (v0.10.7)**: v0.10.5 후에도 양 플랫폼에서 어긋남 재재제보 — "글이 길어지면 안 맞음"이 결정적 단서. 원인은 `paper-lines` 그라디언트의 반복 주기가 `1.6rem + 1px`로 텍스트 줄 높이(`1.6rem`)보다 1px 길어 한 줄마다 1px씩 누적되는 것. 1px 선을 주기 안쪽에 그려 주기를 정확히 1.6rem으로 맞춤. 구/신 비교 스크린샷으로 20줄 정렬 검증 완료(순수 CSS 산수 오류라 데스크톱 검증 유효). APK 재빌드·Release 갱신 완료.
-- **앱 아이콘을 다크 네이비 배경 일러스트로 교체 (v0.10.6)**: 소스가 투명 배경 + 둥근 카드 형태라 카드 톤(`#3c3a42`)으로 flatten, 웹·안드로이드·Capacitor 소스 전부 재생성. 상세는 CHANGELOG 참고.
-- 이전 이력(줄노트 text-size-adjust 수정, 공개 회원가입·배우자 초대·다자녀·관리자 문의, README·저장소 Public 전환 등 v0.10.0~v0.10.5)은 CHANGELOG.md 참고.
+- **안드로이드 PWA 단일화 — Capacitor/APK 완전 철거 (v0.11.0)**: v0.10.4부터 미뤄온 결정 실행. Capacitor 코드 의존은 `useAndroidBackButton.ts` 1개뿐이라 핵심은 **뒤로가기 훅의 popstate 재구현**이었음.
+  - **"홈 앵커 불변식" 설계**: 히스토리 스택을 항상 `['/']` 또는 `['/', 현재화면]`(깊이 2 이하)로 유지 — 비홈→비홈 이동은 `AppLink`/`navigate(...,{replace:true})`로 처리해 스택이 안 쌓이게 하고, 홈으로 가는 이동은 `useGoHome()`이 앵커로 `pop`. 이러면 "비홈에서 백=홈"은 라우터 네이티브 pop으로, "홈에서 백=앱 최소화"는 스택 바닥이라 OS 기본 동작으로 재현됨(Capacitor 하드웨어 백버튼 없이). `src/lib/navigation.tsx`(AppLink·useGoHome), `src/lib/useBackNavigation.ts`(standalone 딥링크 정규화 + POP 안전망) 신설.
+  - raw `pushState` 센티널 트랩 방식은 기각 — react-router(v8.1.0)가 `history.state.idx`로 스택을 추적하는데 raw push가 이를 오염시킴(소스 확인).
+  - **UX 변경**: 상세·검색 화면의 헤더 ← 버튼이 "직전 화면"이 아닌 "홈"으로 감(하드웨어 백과 동작 통일, 사용자 확정 사항).
+  - Capacitor 의존성 5개(`@capacitor/*`) 제거, `capacitor.config.ts`·`android/`·`assets/`(icon·splash 소스) 삭제, `scripts/generate-icons.mjs`의 Capacitor 자산 생성 블록 제거.
+  - Playwright로 8가지 시나리오 전부 검증(불변식 유지, 비홈→백=홈, 홈→백=이탈, 헤더←=홈, standalone 딥링크 정규화, 새로고침 멱등, dev/prod 빌드 양쪽, 로그인 리다이렉트 무경합) — dev 서버와 `vite preview`(실제 프로덕션 빌드) 둘 다 확인.
+  - GitHub Release `android-latest`의 APK 자산 제거하고 "PWA로 전환됨" 안내문으로 교체. README 방법 B(APK) 섹션 삭제.
+- 이전 이력(줄노트 1px 누적 오차 수정 v0.10.7, 앱 아이콘 교체 v0.10.6 등)은 CHANGELOG.md 참고.
 
 ## 알려진 이슈
 
+- **줄노트 배경선이 실기기(아이폰)에서 아예 안 보인다는 제보 (조사 중, 미해결)**: v0.10.7 배포 후 와이프 아이폰 스크린샷에서 `paper-lines` 배경선이 완전히 안 보임(정렬 문제가 아니라 부재). 실제 WebKit 엔진 + 프로덕션 빌드로 재현 시도했으나 정상 렌더링됨(코드·빌드 문제 아님으로 확인) — PWA/Safari 캐시가 유력 용의자. **다음 확인 필요**: 앱 완전 종료 후 재실행(또는 삭제 후 재설치)해도 재현되는지 재확인 요청해둔 상태, 아직 회신 없음.
 - **테스트 데이터 미정리**: 실 프로덕션 E2E 검증에 쓴 테스트 계정 3개(`bd-e2e-test-1/2/3-20260706@example.com`)와 "테스트가족" household가 아직 DB에 남아있음. 정리 SQL:
   ```sql
   delete from households where name = '테스트가족';
   delete from auth.users where email like 'bd-e2e-test-%@example.com';
   ```
-- **미결정 사항**: 안드로이드를 Capacitor/APK 없이 PWA 단일화할지 논의만 하고 결정은 안 됨 — 우선 README에 PWA 설치 옵션만 추가해둔 상태. 전환 시 `useAndroidBackButton`의 `@capacitor/app` 의존을 `popstate` 기반으로 재구현 필요(같은 고정 규칙 로직 재사용 가능).
 - 부부 실제 로그인 정보(이메일/비밀번호)는 이 문서에 기록하지 않음.
-- 안드로이드 실기기 재검증 필요: 이전 라운드(뒤로가기 고정 규칙, 시트 안전영역, 사진 스와이프)에 더해 이번 다자녀 스위처·일기 대상 선택도 실기기 미확인.
-- **PWA 서비스워커 캐싱 주의**: 배포 후에도 이미 방문했던 브라우저/설치된 PWA는 이전 버전을 계속 서빙할 수 있음(이번 세션에서 직접 겪음) — 실기기에서 업데이트가 안 보이면 앱 완전 종료 후 재실행 필요.
-- Release 서명 키스토어는 아직 없음(debug 빌드까지만).
+- **안드로이드·아이폰 실기기 재검증 필요**: 이번 뒤로가기 재구현(홈 앵커 불변식)이 데스크톱 Playwright로는 검증됐지만, 실기기 하드웨어/제스처 백·Chrome의 히스토리 조작 개입 여부는 미확인. 기존 이월 항목(다자녀 스위처·일기 대상 선택·새 앱 아이콘)도 함께 재검증 필요.
+- **PWA 서비스워커 캐싱 주의**: 배포 후에도 이미 방문했던 브라우저/설치된 PWA는 이전 버전을 계속 서빙할 수 있음 — 실기기에서 업데이트가 안 보이면 앱 완전 종료 후 재실행 필요.
 - `src/types/database.ts`는 여전히 수동 작성 타입(gen-types 미적용).
 - 투자일기 거래·배당·메모는 삭제만 가능, 수정(edit) UI는 없음(의도된 범위).
 - claude.ai/design 연동, Cloudflare R2 사진 분리는 보류 상태(설계만 `docs/r2-photo-plan.md`에 보존).
@@ -32,7 +36,6 @@
 ## 다음 TODO
 
 0. [ ] 위 "테스트 데이터 미정리" SQL 실행
-1. [ ] 실기기(안드로이드·아이폰) 재검증: **긴 글 줄노트 정렬(v0.10.7 누적 오차 수정)** + 다자녀 스위처·일기 대상 선택·새 앱 아이콘·기존 UX(뒤로가기·시트 여백·사진 스와이프). PWA는 서비스워커 캐시 때문에 앱 완전 종료 후 재실행 필요할 수 있음
-2. [ ] (결정 필요) 안드로이드 Capacitor/APK를 걷어내고 PWA로 단일화할지 — 장점(배포 부담 제거)·단점(뒤로가기 재구현) 논의됨, 진행 여부만 확정하면 됨
+1. [ ] 와이프 아이폰 줄노트 배경선 미표시 재확인 (앱 완전 종료 후 재실행 결과 회신 대기 중)
+2. [ ] 실기기(안드로이드·아이폰) 재검증: **PWA 단일화 후 뒤로가기 동작**(하드웨어/제스처 백, 헤더 ←, 딥링크) + 다자녀 스위처·일기 대상 선택·새 앱 아이콘
 3. [ ] (저장소 압박 시) 사진만 Cloudflare R2로 분리 — 설계는 `docs/r2-photo-plan.md`에 보존, 아직 미실행
-4. [ ] (정식 배포 시) Android release 서명 키스토어 생성 + release 빌드 서명 설정
