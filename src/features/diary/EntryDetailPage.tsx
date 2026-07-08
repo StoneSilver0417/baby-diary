@@ -142,8 +142,10 @@ export function EntryDetailPage() {
           {entry.comments.map((comment) => (
             <div key={comment.id} className="flex items-start gap-2 text-base">
               <div className="flex-1">
-                <span className="font-medium text-foreground">{authorOf(comment.author_id)}</span>{' '}
-                <span className="text-foreground">{comment.content}</span>
+                <div className="text-sm font-medium text-muted-foreground">
+                  {authorOf(comment.author_id)}
+                </div>
+                <p className="whitespace-pre-wrap text-foreground">{comment.content}</p>
               </div>
               {comment.author_id === userId && id && (
                 <button
