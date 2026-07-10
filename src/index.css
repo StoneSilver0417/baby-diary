@@ -36,7 +36,7 @@
   --sticker-mint-foreground: oklch(0.48 0.09 165);
   --sticker-pink: oklch(0.88 0.07 15);
   --sticker-pink-foreground: oklch(0.5 0.1 15);
-  --paper-line: oklch(0.9 0.02 78);
+  --paper-line: oklch(0.86 0.025 78);
   --tape: oklch(0.92 0.05 95 / 0.75);
 }
 
@@ -112,16 +112,21 @@
 
 /* 그림일기 장식 유틸 (일기 탭 전용) */
 @utility paper-lines {
-  /* 반복 주기는 마지막 정지점으로 결정된다. 1px 선을 1.6rem 뒤에 붙이면
-     주기가 1.6rem + 1px가 되어 텍스트 줄 높이(1.6rem)와 한 줄마다 1px씩
-     어긋남이 누적된다(긴 글일수록 심해짐). 선을 주기 안쪽 끝에 그려
-     주기를 정확히 1.6rem으로 유지한다. */
+  /* 반복 주기는 마지막 정지점으로 결정된다 → 정확히 1.6rem(텍스트 줄 높이와 일치)로
+     유지해 한 줄마다 어긋남이 누적되지 않게 한다.
+     단, 1px 선을 타일 경계(1.6rem)에 딱 붙이면(calc(1.6rem - 1px)~1.6rem) iOS/WebKit
+     고해상도 기기에서 타일 이음새의 서브픽셀 안티앨리어싱에 선이 먹혀 아예 사라진다
+     (데스크톱은 정상, 아이폰에서만 재현된 실기기 버그). 그래서 선을 이음새에서 1px
+     떼어 타일 내부(calc(1.6rem - 2px)~calc(1.6rem - 1px))에 그린다. 아래위로 투명 여백이
+     생겨 이음새 블렌딩의 영향을 받지 않는다. */
   background-image: repeating-linear-gradient(
     to bottom,
-    transparent,
-    transparent calc(1.6rem - 1px),
+    transparent 0,
+    transparent calc(1.6rem - 2px),
+    var(--paper-line) calc(1.6rem - 2px),
     var(--paper-line) calc(1.6rem - 1px),
-    var(--paper-line) 1.6rem
+    transparent calc(1.6rem - 1px),
+    transparent 1.6rem
   );
   background-position: 0 0rem;
 }
