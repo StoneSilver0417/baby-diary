@@ -115,7 +115,13 @@ type SaveEntryInput = {
   newPhotos: Blob[]
 }
 
-export async function saveEntry(input: SaveEntryInput): Promise<string> {
+export type SaveEntryResult = {
+  entryId: string
+  /** 형식·용량 문제로 첨부하지 못하고 건너뛴 사진 수(0이면 전부 성공) */
+  failedPhotos: number
+}
+
+export async function saveEntry(input: SaveEntryInput): Promise<SaveEntryResult> {
   if (useMock) {
     await delay(300)
     const existing = mockState.entries.find((e) => e.id === input.entryId)
@@ -132,7 +138,7 @@ export async function saveEntry(input: SaveEntryInput): Promise<string> {
       existing.child_id = input.childId
       existing.photos = [...keptPhotos, ...newPhotoObjs]
       newPhotoObjs.forEach((p) => (p.entry_id = existing.id))
-      return existing.id
+      return { entryId: existing.id, failedPhotos: 0 }
     }
 
     const id = crypto.randomUUID()
@@ -150,7 +156,7 @@ export async function saveEntry(input: SaveEntryInput): Promise<string> {
       likedBy: [],
       authorName: input.authorName,
     })
-    return id
+    return { entryId: id, failedPhotos: 0 }
   }
 
   // 1. 텍스트 먼저 upsert — 사진 실패해도 글은 보존
@@ -183,28 +189,35 @@ export async function saveEntry(input: SaveEntryInput): Promise<string> {
     await supabase.from('diary_photos').delete().in('id', toDelete.map((p) => p.id))
   }
 
-  // 3. 새 사진 업로드 (실패 시 업로드분 롤백)
-  const uploadedPaths: string[] = []
-  try {
-    const startOrder = input.keepPhotoIds.length
-    for (let i = 0; i < input.newPhotos.length; i++) {
-      const compressed = await compressImage(input.newPhotos[i])
+  // 3. 새 사진 업로드. 사진마다 독립적으로 처리해, 한 장이 실패해도(형식·용량 등)
+  //    나머지 사진과 글은 그대로 저장되게 한다. sort_order는 성공한 것만 순번을 매긴다.
+  let failedPhotos = 0
+  let order = input.keepPhotoIds.length
+  for (const photo of input.newPhotos) {
+    try {
+      const compressed = await compressImage(photo)
+      const ext = compressed.type === 'image/webp' ? 'webp' : 'jpg'
       // 경로 첫 폴더 = household_id (storage RLS가 이 폴더로 격리)
-      const path = `${input.householdId}/${entryId}/${crypto.randomUUID()}.webp`
-      const { error: uploadError } = await supabase.storage.from('photos').upload(path, compressed)
+      const path = `${input.householdId}/${entryId}/${crypto.randomUUID()}.${ext}`
+      const { error: uploadError } = await supabase.storage
+        .from('photos')
+        .upload(path, compressed, { contentType: compressed.type })
       if (uploadError) throw uploadError
-      uploadedPaths.push(path)
       const { error: insertError } = await supabase
         .from('diary_photos')
-        .insert({ entry_id: entryId, storage_path: path, sort_order: startOrder + i })
-      if (insertError) throw insertError
+        .insert({ entry_id: entryId, storage_path: path, sort_order: order })
+      if (insertError) {
+        await supabase.storage.from('photos').remove([path])
+        throw insertError
+      }
+      order++
+    } catch (err) {
+      console.error('사진 업로드 실패 — 이 사진은 건너뜁니다:', err)
+      failedPhotos++
     }
-  } catch (err) {
-    if (uploadedPaths.length > 0) await supabase.storage.from('photos').remove(uploadedPaths)
-    throw err
   }
 
-  return entryId
+  return { entryId, failedPhotos }
 }
 
 export async function toggleLike(entryId: string, userId: string, like: boolean): Promise<void> {

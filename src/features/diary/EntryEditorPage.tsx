@@ -91,7 +91,7 @@ export function EntryEditorPage() {
       return
     }
     try {
-      await saveEntry.mutateAsync({
+      const { failedPhotos } = await saveEntry.mutateAsync({
         entryId,
         householdId,
         authorId: userId,
@@ -102,7 +102,13 @@ export function EntryEditorPage() {
         keepPhotoIds: existingPhotos.map((p) => p.id),
         newPhotos,
       })
-      toast.success('저장했어요.')
+      if (failedPhotos > 0) {
+        toast.warning(
+          `사진 ${failedPhotos}장은 형식·용량 문제로 첨부하지 못했어요. 글과 나머지 사진은 저장됐어요.`,
+        )
+      } else {
+        toast.success('저장했어요.')
+      }
       goHome()
     } catch {
       // useSaveEntry의 onError 토스트로 처리됨
@@ -205,11 +211,14 @@ export function EntryEditorPage() {
         />
       </div>
 
+      {/* 배경 줄 위치는 padding-top에 좌우된다. 표시 화면(<p>)과 같은 px-1 py-1로 맞춰야
+          줄이 입력 텍스트와 같은 위치에 온다(Textarea 기본 py-2는 줄 주기와 어긋나 타이핑
+          중 줄이 안 맞았다). */}
       <Textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
         placeholder="오늘 있었던 일을 기록해 보세요"
-        className="paper-lines min-h-40 flex-1 font-hand text-lg leading-[1.6rem]"
+        className="paper-lines min-h-40 flex-1 px-1 py-1 font-hand text-lg leading-[1.6rem]"
       />
 
       <Button onClick={handleSubmit} disabled={saveEntry.isPending}>
