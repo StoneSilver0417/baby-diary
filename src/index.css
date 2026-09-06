@@ -37,8 +37,7 @@
   --sticker-pink: oklch(0.88 0.07 15);
   --sticker-pink-foreground: oklch(0.5 0.1 15);
   --paper-line: oklch(0.86 0.025 78);
-  --paper-line-height: 1.6rem;
-  --paper-line-padding-block: 0.25rem;
+  --paper-line-height: 28px;
   --tape: oklch(0.92 0.05 95 / 0.75);
 }
 
@@ -114,14 +113,11 @@
 
 /* 그림일기 장식 유틸 (일기 탭 전용) */
 @utility paper-lines {
-  /* iOS/WebKit은 repeating-linear-gradient를 간헐적으로 렌더링하지 못해(선이 아예 안
-     그려지거나 화면마다 들쭉날쭉) 여러 번 손봐도 재발했다. 그래서 한 칸(1.6rem)짜리
-     linear-gradient를 background-size로 세로 반복(타일)하는 방식으로 바꿨다 — 타일 배경은
-     iOS에서 훨씬 안정적으로 그려진다. 이 유틸이 줄 높이와 세로 여백까지 소유해야 피드의
-     leading-relaxed나 Textarea 기본 padding이 덮어써도 텍스트 baseline이 흔들리지 않는다.
-     선은 타일 경계에서 1px 안쪽에 그려 이음새 서브픽셀 블렌딩에 먹히지 않게 한다. */
-  line-height: var(--paper-line-height);
-  padding-block: var(--paper-line-padding-block);
+  /* 줄높이와 배경 반복 주기를 28px로 통일하고 !important를 부여해 Tailwind의 text-lg 등
+     폰트 클래스가 줄높이를 덮어쓰는 것을 방지한다.
+     Hi Melody 폰트의 베이스라인 위치(폰트 메트릭)에 맞춰 background-position 오프셋(-6px)을
+     지정해 손글씨 텍스트와 줄노트 배경선이 1px 단위까지 정확히 포개지도록 정렬한다. */
+  line-height: 28px !important;
   background-image: linear-gradient(
     to bottom,
     transparent calc(var(--paper-line-height) - 2px),
@@ -131,7 +127,7 @@
   );
   background-size: 100% var(--paper-line-height);
   background-repeat: repeat;
-  background-position: 0 0;
+  background-position: 0 -6px;
 }
 
 /* Hi Melody는 자간이 좁아 붙어 보이므로 살짝 띄워 손글씨 느낌을 살린다 */

@@ -146,7 +146,7 @@ export function EntryDetailPage() {
       )}
 
       <div className="p-5">
-        <p className="paper-lines whitespace-pre-wrap px-1 py-1 font-hand text-lg text-foreground">
+        <p className="paper-lines whitespace-pre-wrap px-1 py-0 font-hand text-lg text-foreground">
           {entry.content}
         </p>
 

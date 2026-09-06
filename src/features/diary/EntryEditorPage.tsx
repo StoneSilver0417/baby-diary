@@ -215,7 +215,7 @@ export function EntryEditorPage() {
         value={content}
         onChange={(e) => setContent(e.target.value)}
         placeholder="오늘 있었던 일을 기록해 보세요"
-        className="paper-lines min-h-40 flex-1 px-1 py-1 font-hand text-lg"
+        className="paper-lines min-h-40 flex-1 px-1 py-0 font-hand text-lg"
       />
 
       <Button onClick={handleSubmit} disabled={saveEntry.isPending}>
