@@ -111,7 +111,7 @@ export function FeedPage() {
               </div>
             )}
 
-            <p className="paper-lines line-clamp-4 whitespace-pre-wrap px-2 py-2 font-hand text-lg leading-relaxed text-foreground">
+            <p className="paper-lines line-clamp-4 whitespace-pre-wrap px-2 font-hand text-lg text-foreground">
               {entry.content}
             </p>
 

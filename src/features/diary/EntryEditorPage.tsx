@@ -211,14 +211,11 @@ export function EntryEditorPage() {
         />
       </div>
 
-      {/* 배경 줄 위치는 padding-top에 좌우된다. 표시 화면(<p>)과 같은 px-1 py-1로 맞춰야
-          줄이 입력 텍스트와 같은 위치에 온다(Textarea 기본 py-2는 줄 주기와 어긋나 타이핑
-          중 줄이 안 맞았다). */}
       <Textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
         placeholder="오늘 있었던 일을 기록해 보세요"
-        className="paper-lines min-h-40 flex-1 px-1 py-1 font-hand text-lg leading-[1.6rem]"
+        className="paper-lines min-h-40 flex-1 px-1 font-hand text-lg"
       />
 
       <Button onClick={handleSubmit} disabled={saveEntry.isPending}>

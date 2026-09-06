@@ -37,6 +37,8 @@
   --sticker-pink: oklch(0.88 0.07 15);
   --sticker-pink-foreground: oklch(0.5 0.1 15);
   --paper-line: oklch(0.86 0.025 78);
+  --paper-line-height: 1.6rem;
+  --paper-line-padding-block: 0.25rem;
   --tape: oklch(0.92 0.05 95 / 0.75);
 }
 
@@ -115,17 +117,19 @@
   /* iOS/WebKit은 repeating-linear-gradient를 간헐적으로 렌더링하지 못해(선이 아예 안
      그려지거나 화면마다 들쭉날쭉) 여러 번 손봐도 재발했다. 그래서 한 칸(1.6rem)짜리
      linear-gradient를 background-size로 세로 반복(타일)하는 방식으로 바꿨다 — 타일 배경은
-     iOS에서 훨씬 안정적으로 그려진다. 텍스트 줄 높이(1.6rem)와 타일 높이를 일치시키고,
-     선은 타일 경계에서 1px 안쪽(calc(1.6rem - 2px)~calc(1.6rem - 1px))에 그려 이음새
-     서브픽셀 블렌딩에 먹히지 않게 한다. */
+     iOS에서 훨씬 안정적으로 그려진다. 이 유틸이 줄 높이와 세로 여백까지 소유해야 피드의
+     leading-relaxed나 Textarea 기본 padding이 덮어써도 텍스트 baseline이 흔들리지 않는다.
+     선은 타일 경계에서 1px 안쪽에 그려 이음새 서브픽셀 블렌딩에 먹히지 않게 한다. */
+  line-height: var(--paper-line-height);
+  padding-block: var(--paper-line-padding-block);
   background-image: linear-gradient(
     to bottom,
-    transparent calc(1.6rem - 2px),
-    var(--paper-line) calc(1.6rem - 2px),
-    var(--paper-line) calc(1.6rem - 1px),
-    transparent calc(1.6rem - 1px)
+    transparent calc(var(--paper-line-height) - 2px),
+    var(--paper-line) calc(var(--paper-line-height) - 2px),
+    var(--paper-line) calc(var(--paper-line-height) - 1px),
+    transparent calc(var(--paper-line-height) - 1px)
   );
-  background-size: 100% 1.6rem;
+  background-size: 100% var(--paper-line-height);
   background-repeat: repeat;
   background-position: 0 0;
 }
