@@ -3,51 +3,143 @@ const WEBP_QUALITY = 0.8
 const JPEG_QUALITY = 0.85
 
 function toBlobAsync(canvas: HTMLCanvasElement, type: string, quality: number) {
-  return new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, quality))
+  return new Promise<Blob | null>((resolve) => {
+    try {
+      canvas.toBlob(
+        (blob) => resolve(blob),
+        type,
+        quality,
+      )
+    } catch {
+      resolve(null)
+    }
+  })
 }
 
-/**
- * 이미지를 캔버스에 그릴 수 있는 형태로 디코드한다.
- * createImageBitmap(EXIF 회전 반영)을 우선 쓰되, 실패하면 <img> 디코드로 폴백한다.
- * 특정 포맷·환경에서 둘 중 한쪽만 성공하는 경우가 있어(예: 일부 기기의 HEIC, 큰 이미지)
- * 이중 경로로 견고성을 높인다.
- */
+export function dataUrlToBlob(dataUrl: string): Blob {
+  const parts = dataUrl.split(',')
+  const mimeMatch = parts[0]?.match(/:(.*?);/)
+  const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg'
+  const binaryStr = atob(parts[1] || '')
+  const len = binaryStr.length
+  const bytes = new Uint8Array(len)
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryStr.charCodeAt(i)
+  }
+  return new Blob([bytes], { type: mime })
+}
+
+function readFileAsDataUrl(file: File | Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        resolve(reader.result)
+      } else {
+        reject(new Error('FileReader 결과가 유효하지 않습니다.'))
+      }
+    }
+    reader.onerror = () => reject(reader.error ?? new Error('파일 읽기 실패'))
+    reader.onabort = () => reject(new Error('파일 읽기가 중단되었습니다.'))
+    reader.readAsDataURL(file)
+  })
+}
+
+function loadImageFromSrc(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => {
+      if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+        resolve(img)
+      } else {
+        reject(new Error('이미지 크기가 0입니다.'))
+      }
+    }
+    img.onerror = () => reject(new Error('이미지 로드에 실패했습니다.'))
+    img.src = src
+
+    if (typeof img.decode === 'function') {
+      img.decode().then(() => {
+        if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+          resolve(img)
+        }
+      }).catch(() => {
+        // img.onload/onerror가 처리
+      })
+    }
+  })
+}
+
 async function decodeImage(
   file: File | Blob,
 ): Promise<{ source: CanvasImageSource; width: number; height: number; release: () => void }> {
-  try {
-    const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' })
-    if (bmp.width > 0 && bmp.height > 0) {
-      return { source: bmp, width: bmp.width, height: bmp.height, release: () => bmp.close() }
+  if (typeof createImageBitmap === 'function') {
+    try {
+      const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' })
+      if (bmp.width > 0 && bmp.height > 0) {
+        return { source: bmp, width: bmp.width, height: bmp.height, release: () => bmp.close() }
+      }
+      bmp.close()
+    } catch {
+      try {
+        const bmp = await createImageBitmap(file)
+        if (bmp.width > 0 && bmp.height > 0) {
+          return { source: bmp, width: bmp.width, height: bmp.height, release: () => bmp.close() }
+        }
+        bmp.close()
+      } catch {
+        // <img> 폴백 진행
+      }
     }
-    bmp.close()
-  } catch {
-    // 아래 <img> 폴백을 시도한다.
   }
 
-  const url = URL.createObjectURL(file)
+  let objectUrl: string | null = null
   try {
-    const img = new Image()
-    img.src = url
-    await img.decode()
-    if (!img.naturalWidth || !img.naturalHeight) throw new Error('빈 이미지')
+    objectUrl = URL.createObjectURL(file)
+    const img = await loadImageFromSrc(objectUrl)
+    const urlToRevoke = objectUrl
     return {
       source: img,
       width: img.naturalWidth,
       height: img.naturalHeight,
-      release: () => URL.revokeObjectURL(url),
+      release: () => {
+        try {
+          URL.revokeObjectURL(urlToRevoke)
+        } catch {}
+      },
+    }
+  } catch {
+    if (objectUrl) {
+      try {
+        URL.revokeObjectURL(objectUrl)
+      } catch {}
+    }
+  }
+
+  try {
+    const dataUrl = await readFileAsDataUrl(file)
+    const img = await loadImageFromSrc(dataUrl)
+    return {
+      source: img,
+      width: img.naturalWidth,
+      height: img.naturalHeight,
+      release: () => {},
     }
   } catch (err) {
-    URL.revokeObjectURL(url)
-    throw err
+    throw new Error(
+      `이미지를 디코드할 수 없습니다 (HEIC 또는 지원되지 않는 이미지 형식): ${
+        err instanceof Error ? err.message : String(err)
+      }`,
+    )
   }
 }
 
-/** 사진을 최대 1600px로 리사이즈하고 WebP(미지원 시 JPEG)로 압축한다. */
 export async function compressImage(file: File | Blob): Promise<Blob> {
   const decoded = await decodeImage(file)
   try {
-    const scale = Math.min(1, MAX_DIMENSION / Math.max(decoded.width, decoded.height))
+    const maxDim = Math.max(decoded.width, decoded.height)
+    const scale = maxDim > MAX_DIMENSION ? MAX_DIMENSION / maxDim : 1
     const width = Math.max(1, Math.round(decoded.width * scale))
     const height = Math.max(1, Math.round(decoded.height * scale))
 
@@ -58,11 +150,23 @@ export async function compressImage(file: File | Blob): Promise<Blob> {
     if (!ctx) throw new Error('캔버스 컨텍스트를 생성할 수 없습니다.')
     ctx.drawImage(decoded.source, 0, 0, width, height)
 
-    // WebP 우선, 인코딩 미지원(일부 사파리 등)으로 null이면 JPEG로 폴백한다.
-    const blob =
-      (await toBlobAsync(canvas, 'image/webp', WEBP_QUALITY)) ??
-      (await toBlobAsync(canvas, 'image/jpeg', JPEG_QUALITY))
-    if (!blob) throw new Error('이미지 압축에 실패했습니다.')
+    let blob = await toBlobAsync(canvas, 'image/webp', WEBP_QUALITY)
+    if (!blob) {
+      blob = await toBlobAsync(canvas, 'image/jpeg', JPEG_QUALITY)
+    }
+    if (!blob) {
+      try {
+        const dataUrl = canvas.toDataURL('image/jpeg', JPEG_QUALITY)
+        blob = dataUrlToBlob(dataUrl)
+      } catch {
+        const dataUrl = canvas.toDataURL('image/png')
+        blob = dataUrlToBlob(dataUrl)
+      }
+    }
+
+    if (!blob || blob.size === 0) {
+      throw new Error('이미지 압축에 실패했습니다.')
+    }
     return blob
   } finally {
     decoded.release()

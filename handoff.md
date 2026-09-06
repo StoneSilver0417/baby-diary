@@ -2,13 +2,17 @@
 
 ## 현재 상태
 
-- **버전**: v0.11.6 (사진 저장 견고화 + 줄노트 타일 재구현 + 에디터 정렬)
-- **빌드 상태**: `npx tsc --noEmit` 통과, `npm run build` 통과.
-- **배포 상태**: 웹은 push로 자동 배포. GitHub Release `android-latest`는 안내문으로 교체(APK 파일 제거). 안드로이드도 아이폰과 동일하게 PWA 단일 경로.
-- **실행 방법/URL**: 웹 https://baby-diary-tau.vercel.app (안드로이드는 Chrome에서 접속 후 "홈 화면에 추가"·"앱 설치", `README.md` 참고) / 로컬 `npm run dev`(`.env.local`의 `VITE_USE_MOCK=false`, 실 Supabase 연결).
+- **버전**: v0.12.4 (줄노트 배경선 정렬 안정화 + iOS Safari/PWA 사진 등록 강화)
+- **빌드 상태**: `npx tsc --noEmit` 통과, `npm run build` 통과, `npm test` 21개 전수 통과.
+- **배포 상태**: 웹은 push로 자동 배포. 안드로이드/아이폰 PWA 단일 경로.
+- **실행 방법/URL**: 웹 https://baby-diary-tau.vercel.app (안드로이드/아이폰 PWA 설치 가능, `README.md` 참고) / 로컬 `npm run dev`(`.env.local`의 `VITE_USE_MOCK=false`, 실 Supabase 연결).
 
 ## 최근 작업
 
+- **줄노트 배경선 정렬 안정화 + iOS Safari/PWA 사진 등록 강화 (v0.12.4)**:
+  - 줄노트(paper-lines) background-position 정규화(`0 0`) + `background-attachment: local` + `background-origin: padding-box` 적용. font-hand 크로스 브라우저 baseline 렌더링 일관성 보정. FeedPage/EntryDetailPage/EntryEditorPage 패딩 통일(`px-1 py-0`).
+  - iOS Safari HEIC/HEIF 대응 `accept="image/*,image/heic,image/heif"`. `image.ts`에 createImageBitmap(EXIF) → createImageBitmap → `<img>`(Object URL) → `<img>`(FileReader DataURL) 4단계 디코드 폴백 + toBlob null 반환 시 `toDataURL` -> `dataUrlToBlob` 안전 폴백 구현.
+  - vitest 단위 테스트 21개 전수 통과, oxlint 및 tsc build 검증 완료.
 - **사진 저장 견고화 + 줄노트 타일 재구현 + 에디터 정렬 (v0.11.6)**: 3건. ① 사진 1장이 `compressImage`에서 실패하면 전체 저장이 막히던 문제 → 디코드(createImageBitmap→<img>) · 인코딩(WebP→JPEG) 이중 폴백 + 사진별 독립 업로드(한 장 실패해도 나머지·글 저장, 실패 장수 경고 토스트). `saveEntry` 반환 `{entryId,failedPhotos}`로 변경. ② 아이폰 줄노트 소실 재발 → `repeating-linear-gradient`가 iOS에서 근본적으로 불안정하다 보고 `background-size: 100% 1.6rem` 타일 방식으로 교체(더 안정적). ③ 에디터 textarea 여백을 표시 화면과 같은 `px-1 py-1`로 맞춰 입력 중 줄 정렬 수정. Playwright(Chromium=안드로이드)로 정렬·사진저장 검증. **줄노트 iOS 소실 해결 여부는 실기기 확인 필요.**
 - **줄노트 배경선 아이폰 소실 수정 (v0.11.5)**: 와이프 아이폰 재제보(재실행에도 배경선 완전 부재) → v0.10.7 회귀로 확정. 1px 선을 반복 타일 경계(seam)에 딱 붙여 그린 탓에 iOS/WebKit 고DPI 래스터라이저가 이음새 안티앨리어싱으로 선을 없앰(데스크톱 정상). 반복 주기 `1.6rem`(정렬)은 유지하고 1px 선을 이음새에서 떼어 타일 내부(`calc(1.6rem-2px)`~`calc(1.6rem-1px)`)로 이동, `--paper-line` 대비도 소폭 강화. 데스크톱 20줄 정렬·렌더링 검증(seam 소실은 고DPI 기기 전용이라 데스크톱 재현 불가) → **실기기 최종 확인 대기**.
 - **앨범 날짜별 그룹 + 사진 뷰어 (v0.11.4)**: 앨범을 평면 그리드→날짜별 타일로 개편. 여러 장이면 대표 사진 + 뒤에 겹침 효과 + 장수 배지, 클릭 시 일기 대신 전체화면 사진 뷰어(라이트박스, 스와이프·object-contain, 앨범 페이지 내부 오버레이 상태로 구현해 뒤로가기 불변식과 무충돌). `PhotoCarousel`에 `fit`/`fill` 옵션 추가(기존 사용처 무영향). Playwright로 실제 업로드 검증 완료.

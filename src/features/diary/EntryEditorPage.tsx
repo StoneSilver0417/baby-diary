@@ -71,8 +71,18 @@ export function EntryEditorPage() {
     if (files.length > remaining) {
       toast.error('사진은 최대 3장까지 첨부할 수 있어요.')
     }
+    if (picked.length === 0) return
     setNewPhotos((prev) => [...prev, ...picked])
-    setNewPhotoPreviews((prev) => [...prev, ...picked.map((b) => URL.createObjectURL(b))])
+    setNewPhotoPreviews((prev) => [
+      ...prev,
+      ...picked.map((b) => {
+        try {
+          return URL.createObjectURL(b)
+        } catch {
+          return ''
+        }
+      }),
+    ])
   }
 
   function removeExistingPhoto(id: string) {
@@ -201,7 +211,7 @@ export function EntryEditorPage() {
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept="image/*,image/heic,image/heif"
           multiple
           className="hidden"
           onChange={(e) => {

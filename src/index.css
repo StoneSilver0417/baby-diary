@@ -94,6 +94,8 @@
     min-height: 100dvh;
     /* iOS 홈화면 PWA에서 당겨서 새로고침/바운스 억제 */
     overscroll-behavior-y: none;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 }
 
@@ -113,11 +115,12 @@
 
 /* 그림일기 장식 유틸 (일기 탭 전용) */
 @utility paper-lines {
-  /* 줄높이와 배경 반복 주기를 28px로 통일하고 !important를 부여해 Tailwind의 text-lg 등
-     폰트 클래스가 줄높이를 덮어쓰는 것을 방지한다.
-     Hi Melody 폰트의 베이스라인 위치(폰트 메트릭)에 맞춰 background-position 오프셋(-6px)을
-     지정해 손글씨 텍스트와 줄노트 배경선이 1px 단위까지 정확히 포개지도록 정렬한다. */
-  line-height: 28px !important;
+  /* 줄높이와 배경 반복 주기를 28px(또는 var(--paper-line-height))로 통일하고 !important를 부여해
+     Tailwind의 폰트 클래스가 줄높이를 덮어쓰는 것을 방지한다.
+     iOS Safari / Chrome 간 baseline 불일치를 방지하기 위해 background-position은 0 0 정규 위치를 사용하고,
+     background-attachment: local로 textarea 스크롤 시에도 줄이 텍스트와 함께 동기화되도록 한다.
+     선은 타일 경계에서 1px 안쪽에 그려 iOS 고DPI 래스터라이저의 이음새 블렌딩 소실을 차단한다. */
+  line-height: var(--paper-line-height) !important;
   background-image: linear-gradient(
     to bottom,
     transparent calc(var(--paper-line-height) - 2px),
@@ -127,12 +130,19 @@
   );
   background-size: 100% var(--paper-line-height);
   background-repeat: repeat;
-  background-position: 0 -6px;
+  background-attachment: local;
+  background-origin: padding-box;
+  background-position: 0 0;
 }
 
-/* Hi Melody는 자간이 좁아 붙어 보이므로 살짝 띄워 손글씨 느낌을 살린다 */
+/* Hi Melody 손글씨 폰트 — 자간 및 크로스 브라우저 렌더링 일관성 보정 */
 .font-hand {
   letter-spacing: 0.02em;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 @utility polaroid {

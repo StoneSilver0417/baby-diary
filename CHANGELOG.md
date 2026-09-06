@@ -1,5 +1,28 @@
 # Changelog
 
+## 2026-09-06 (v0.12.4)
+
+### 변경 사항 — 줄노트 배경선 정렬 안정화 + iOS Safari/PWA 사진 등록 강화
+사용자 제보 긴급 이슈 2건 전면 수정:
+① 줄노트 배경선(paper-lines)과 font-hand 텍스트 줄 정렬 어긋남 문제
+② 아이폰(iOS Safari / PWA Standalone)에서 사진 등록 안 되는 문제
+
+- **① 줄노트 배경선(paper-lines) 및 font-hand 렌더링 수정 (`src/index.css`, `FeedPage.tsx`)**:
+  - 임의의 background-position 오프셋(-6px) 의존을 제거하고 정규 `0 0` 위치로 통일.
+  - `background-attachment: local` 적용으로 textarea 스크롤 시에도 배경선과 텍스트가 정확히 동기화되도록 수정.
+  - `background-origin: padding-box`로 1px 테두리 안쪽 패딩 영역과 정확히 정렬.
+  - `.font-hand` 및 `body`에 `-webkit-text-size-adjust: 100%`, `text-rendering: optimizeLegibility`, antialiased 스무딩을 명시해 WebKit과 Chrome 모두에서 폰트 baseline 렌더링 일관성 확보.
+  - `FeedPage`, `EntryDetailPage`, `EntryEditorPage`의 패딩을 `px-1 py-0`으로 완전히 통일.
+- **② iOS Safari / PWA 사진 등록 및 압축 견고화 (`src/lib/image.ts`, `photoPicker.ts`, `EntryEditorPage.tsx`)**:
+  - `EntryEditorPage` 파일 선택 input의 accept 속성에 `image/*,image/heic,image/heif` 명시 지정.
+  - `photoPicker.ts`: `FileList`뿐 아니라 `File[]`, `null`, `undefined` 대응 및 0바이트 손상 파일 안전 필터링.
+  - `image.ts` 디코드 다중 폴백: `createImageBitmap(EXIF)` → `createImageBitmap(기본)` → `<img>` + `URL.createObjectURL` → `<img>` + `FileReader.readAsDataURL` 4단계 안전망 구축 (iOS Safari의 HEIC/blob URL 접근 실패 대응).
+  - `image.ts` 압축 및 캔버스 메모리 안전성: `MAX_DIMENSION = 1600` 비율 축소로 iOS 캔버스 메모리 한도 초과 방지.
+  - `canvas.toBlob()` 실패 시 `canvas.toDataURL('image/jpeg')` 및 PNG fallback (`dataUrlToBlob`)으로 iOS Safari toBlob null 반환 완벽 대응.
+- **테스트/검증**:
+  - vitest 단위 테스트 6개 파일 21개 테스트 전부 통과 (dataUrlToBlob, compressImage, pickPhotos 포함).
+  - oxlint 린트 검증 및 `tsc -b && vite build` 프로덕션 빌드 성공.
+
 ## 2026-07-11 (v0.11.6)
 
 ### 변경 사항 — 사진 저장 실패(1장 문제) + 줄노트 재구현 + 에디터 정렬
