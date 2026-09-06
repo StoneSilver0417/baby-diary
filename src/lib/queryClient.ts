@@ -12,6 +12,7 @@ export const queryClient = new QueryClient({
 
 export const queryKeys = {
   profile: (id: string) => ['profile', id] as const,
+  profiles: ['profiles'] as const,
   children: ['children'] as const,
   household: ['household'] as const,
   feed: ['diary', 'list'] as const,
@@ -26,5 +27,8 @@ export const queryKeys = {
   growth: {
     records: (childId: string) => ['growth', 'records', childId] as const,
     milestones: (childId: string) => ['growth', 'milestones', childId] as const,
+  },
+  inquiries: {
+    mine: (userId: string) => ['inquiries', 'mine', userId] as const,
   },
 }

@@ -11,7 +11,7 @@ export function useHouseholdInfo() {
 }
 
 export function useProfiles() {
-  return useQuery({ queryKey: ['profiles'], queryFn: getProfiles })
+  return useQuery({ queryKey: queryKeys.profiles, queryFn: getProfiles })
 }
 
 export function useFeed() {

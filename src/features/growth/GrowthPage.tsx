@@ -15,6 +15,7 @@ import { useSelectedChild } from '@/features/shared/SelectedChildProvider'
 import { childAge } from '@/lib/childAge'
 import { GrowthChart } from './GrowthChart'
 import { GrowthRecordForm } from './GrowthRecordForm'
+import { getLatestMeasurements } from './growthSummary'
 import { MilestoneForm } from './MilestoneForm'
 import {
   useDeleteGrowthRecord,
@@ -37,7 +38,7 @@ export function GrowthPage() {
     b.record_date.localeCompare(a.record_date),
   )
 
-  const latestRecord = sortedRecords[0]
+  const latestMeasurements = getLatestMeasurements(sortedRecords)
 
   return (
     <div className="min-h-full pb-24">
@@ -59,17 +60,19 @@ export function GrowthPage() {
       </header>
 
       <div className="p-4 space-y-4">
-        {latestRecord && (
+        {(latestMeasurements.height || latestMeasurements.weight) && (
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-2xl border border-border/70 bg-amber-50/50 p-4 dark:bg-amber-950/20">
               <div className="flex items-center gap-2 text-xs font-medium text-amber-700 dark:text-amber-300">
                 <TrendingUp className="size-4" /> 최근 키
               </div>
               <p className="mt-2 text-2xl font-extrabold text-foreground">
-                {latestRecord.height_cm != null ? `${latestRecord.height_cm} cm` : '-'}
+                {latestMeasurements.height ? `${latestMeasurements.height.value} cm` : '-'}
               </p>
               <p className="mt-0.5 text-[11px] text-muted-foreground">
-                {format(new Date(latestRecord.record_date), 'yyyy.MM.dd')} 기준
+                {latestMeasurements.height
+                  ? `${format(new Date(latestMeasurements.height.recordDate), 'yyyy.MM.dd')} 기준`
+                  : '아직 기록 없음'}
               </p>
             </div>
 
@@ -78,10 +81,12 @@ export function GrowthPage() {
                 <Trophy className="size-4" /> 최근 몸무게
               </div>
               <p className="mt-2 text-2xl font-extrabold text-foreground">
-                {latestRecord.weight_kg != null ? `${latestRecord.weight_kg} kg` : '-'}
+                {latestMeasurements.weight ? `${latestMeasurements.weight.value} kg` : '-'}
               </p>
               <p className="mt-0.5 text-[11px] text-muted-foreground">
-                {format(new Date(latestRecord.record_date), 'yyyy.MM.dd')} 기준
+                {latestMeasurements.weight
+                  ? `${format(new Date(latestMeasurements.weight.recordDate), 'yyyy.MM.dd')} 기준`
+                  : '아직 기록 없음'}
               </p>
             </div>
           </div>
