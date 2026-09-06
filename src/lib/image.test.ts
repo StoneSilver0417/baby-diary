@@ -20,6 +20,15 @@ describe('dataUrlToBlob', () => {
     expect(blob.type).toBe('image/png')
     expect(blob.size).toBeGreaterThan(0)
   })
+
+  it('Given a HEIC or unknown data URL, When dataUrlToBlob is called, Then it falls back to image/jpeg Blob', () => {
+    const dataUrl =
+      'data:image/heic;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA='
+    const blob = dataUrlToBlob(dataUrl)
+    expect(blob).toBeInstanceOf(Blob)
+    expect(blob.type).toBe('image/jpeg')
+    expect(blob.size).toBeGreaterThan(0)
+  })
 })
 
 describe('compressImage', () => {

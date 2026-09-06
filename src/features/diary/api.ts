@@ -119,6 +119,50 @@ export type SaveEntryResult = {
   entryId: string
   /** 형식·용량 문제로 첨부하지 못하고 건너뛴 사진 수(0이면 전부 성공) */
   failedPhotos: number
+  /** 실패한 사진들의 상세 에러 메시지 목록 */
+  errors?: string[]
+}
+
+export async function uploadPhoto(
+  householdId: string,
+  entryId: string,
+  photo: Blob,
+  sortOrder: number,
+): Promise<DiaryPhoto> {
+  const compressed = await compressImage(photo)
+  let mimeType = compressed.type
+  if (
+    !mimeType ||
+    mimeType === 'image/heic' ||
+    mimeType === 'image/heif' ||
+    (mimeType !== 'image/jpeg' && mimeType !== 'image/png')
+  ) {
+    mimeType = 'image/jpeg'
+  }
+  const ext = mimeType === 'image/png' ? 'png' : 'jpg'
+  const uploadBlob =
+    compressed.type === mimeType ? compressed : new Blob([compressed], { type: mimeType })
+
+  const path = `${householdId}/${entryId}/${crypto.randomUUID()}.${ext}`
+  const { error: uploadError } = await supabase.storage
+    .from('photos')
+    .upload(path, uploadBlob, { contentType: mimeType, upsert: false })
+  if (uploadError) {
+    console.error('Supabase storage upload error:', uploadError)
+    throw new Error(`스토리지 업로드 실패: ${uploadError.message}`)
+  }
+
+  const { data: photoData, error: insertError } = await supabase
+    .from('diary_photos')
+    .insert({ entry_id: entryId, storage_path: path, sort_order: sortOrder })
+    .select()
+    .single()
+  if (insertError) {
+    console.error('Supabase diary_photos insert error:', insertError)
+    await supabase.storage.from('photos').remove([path])
+    throw new Error(`사진 DB 등록 실패: ${insertError.message}`)
+  }
+  return photoData as DiaryPhoto
 }
 
 export async function saveEntry(input: SaveEntryInput): Promise<SaveEntryResult> {
@@ -192,32 +236,21 @@ export async function saveEntry(input: SaveEntryInput): Promise<SaveEntryResult>
   // 3. 새 사진 업로드. 사진마다 독립적으로 처리해, 한 장이 실패해도(형식·용량 등)
   //    나머지 사진과 글은 그대로 저장되게 한다. sort_order는 성공한 것만 순번을 매긴다.
   let failedPhotos = 0
+  const errors: string[] = []
   let order = input.keepPhotoIds.length
   for (const photo of input.newPhotos) {
     try {
-      const compressed = await compressImage(photo)
-      const ext = compressed.type === 'image/webp' ? 'webp' : 'jpg'
-      // 경로 첫 폴더 = household_id (storage RLS가 이 폴더로 격리)
-      const path = `${input.householdId}/${entryId}/${crypto.randomUUID()}.${ext}`
-      const { error: uploadError } = await supabase.storage
-        .from('photos')
-        .upload(path, compressed, { contentType: compressed.type })
-      if (uploadError) throw uploadError
-      const { error: insertError } = await supabase
-        .from('diary_photos')
-        .insert({ entry_id: entryId, storage_path: path, sort_order: order })
-      if (insertError) {
-        await supabase.storage.from('photos').remove([path])
-        throw insertError
-      }
+      await uploadPhoto(input.householdId, entryId, photo, order)
       order++
     } catch (err) {
-      console.error('사진 업로드 실패 — 이 사진은 건너뜁니다:', err)
+      const msg = err instanceof Error ? err.message : String(err)
+      console.error('사진 업로드 실패 — 이 사진은 건너뜁니다:', msg)
+      errors.push(msg)
       failedPhotos++
     }
   }
 
-  return { entryId, failedPhotos }
+  return { entryId, failedPhotos, errors }
 }
 
 export async function toggleLike(entryId: string, userId: string, like: boolean): Promise<void> {

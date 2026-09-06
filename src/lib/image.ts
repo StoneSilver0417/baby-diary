@@ -1,5 +1,4 @@
 const MAX_DIMENSION = 1600
-const WEBP_QUALITY = 0.8
 const JPEG_QUALITY = 0.85
 
 function toBlobAsync(canvas: HTMLCanvasElement, type: string, quality: number) {
@@ -19,7 +18,15 @@ function toBlobAsync(canvas: HTMLCanvasElement, type: string, quality: number) {
 export function dataUrlToBlob(dataUrl: string): Blob {
   const parts = dataUrl.split(',')
   const mimeMatch = parts[0]?.match(/:(.*?);/)
-  const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg'
+  let mime = mimeMatch ? mimeMatch[1] : 'image/jpeg'
+  if (
+    !mime ||
+    mime === 'image/heic' ||
+    mime === 'image/heif' ||
+    (mime !== 'image/jpeg' && mime !== 'image/png')
+  ) {
+    mime = 'image/jpeg'
+  }
   const binaryStr = atob(parts[1] || '')
   const len = binaryStr.length
   const bytes = new Uint8Array(len)
@@ -49,19 +56,29 @@ function loadImageFromSrc(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image()
     img.crossOrigin = 'anonymous'
+    let settled = false
+
     img.onload = () => {
+      if (settled) return
+      settled = true
       if (img.naturalWidth > 0 && img.naturalHeight > 0) {
         resolve(img)
       } else {
         reject(new Error('이미지 크기가 0입니다.'))
       }
     }
-    img.onerror = () => reject(new Error('이미지 로드에 실패했습니다.'))
+    img.onerror = () => {
+      if (settled) return
+      settled = true
+      reject(new Error('이미지 로드에 실패했습니다.'))
+    }
     img.src = src
 
     if (typeof img.decode === 'function') {
       img.decode().then(() => {
+        if (settled) return
         if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+          settled = true
           resolve(img)
         }
       }).catch(() => {
@@ -150,11 +167,8 @@ export async function compressImage(file: File | Blob): Promise<Blob> {
     if (!ctx) throw new Error('캔버스 컨텍스트를 생성할 수 없습니다.')
     ctx.drawImage(decoded.source, 0, 0, width, height)
 
-    let blob = await toBlobAsync(canvas, 'image/webp', WEBP_QUALITY)
-    if (!blob) {
-      blob = await toBlobAsync(canvas, 'image/jpeg', JPEG_QUALITY)
-    }
-    if (!blob) {
+    let blob = await toBlobAsync(canvas, 'image/jpeg', JPEG_QUALITY)
+    if (!blob || !blob.type || blob.type === 'image/heic' || blob.type === 'image/heif') {
       try {
         const dataUrl = canvas.toDataURL('image/jpeg', JPEG_QUALITY)
         blob = dataUrlToBlob(dataUrl)
@@ -167,6 +181,12 @@ export async function compressImage(file: File | Blob): Promise<Blob> {
     if (!blob || blob.size === 0) {
       throw new Error('이미지 압축에 실패했습니다.')
     }
+
+    const finalMime = blob.type === 'image/png' ? 'image/png' : 'image/jpeg'
+    if (blob.type !== finalMime) {
+      blob = new Blob([blob], { type: finalMime })
+    }
+
     return blob
   } finally {
     decoded.release()

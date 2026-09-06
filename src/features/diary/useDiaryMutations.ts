@@ -11,7 +11,11 @@ export function useSaveEntry() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['diary'] })
     },
-    onError: () => toast.error('저장에 실패했습니다. 다시 시도해 주세요.'),
+    onError: (error) => {
+      const msg =
+        error instanceof Error ? error.message : '저장에 실패했습니다. 다시 시도해 주세요.'
+      toast.error(msg)
+    },
   })
 }
 

@@ -85,6 +85,18 @@ export function EntryEditorPage() {
     ])
   }
 
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files
+    try {
+      await handlePickPhotos(files)
+    } catch (err) {
+      console.error('사진 불러오기 실패:', err)
+      toast.error('사진을 불러오는 데 실패했습니다. 다시 시도해 주세요.')
+    } finally {
+      e.target.value = ''
+    }
+  }
+
   function removeExistingPhoto(id: string) {
     setExistingPhotos((prev) => prev.filter((p) => p.id !== id))
   }
@@ -101,7 +113,7 @@ export function EntryEditorPage() {
       return
     }
     try {
-      const { failedPhotos } = await saveEntry.mutateAsync({
+      const { failedPhotos, errors } = await saveEntry.mutateAsync({
         entryId,
         householdId,
         authorId: userId,
@@ -113,8 +125,9 @@ export function EntryEditorPage() {
         newPhotos,
       })
       if (failedPhotos > 0) {
+        const detail = errors && errors.length > 0 ? ` (${errors[0]})` : ''
         toast.warning(
-          `사진 ${failedPhotos}장은 형식·용량 문제로 첨부하지 못했어요. 글과 나머지 사진은 저장됐어요.`,
+          `사진 ${failedPhotos}장은 형식·용량 문제로 첨부하지 못했어요${detail}. 글과 나머지 사진은 저장됐어요.`,
         )
       } else {
         toast.success('저장했어요.')
@@ -202,7 +215,7 @@ export function EntryEditorPage() {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="flex size-24 shrink-0 items-center justify-center rounded-lg border-2 border-dashed border-border text-2xl text-muted-foreground"
+            className="flex size-24 shrink-0 items-center justify-center rounded-lg border-2 border-dashed border-border text-2xl text-muted-foreground active:scale-95"
             aria-label="사진 추가"
           >
             +
@@ -214,10 +227,9 @@ export function EntryEditorPage() {
           accept="image/*,image/heic,image/heif"
           multiple
           className="hidden"
-          onChange={(e) => {
-            void handlePickPhotos(e.target.files)
-            e.target.value = ''
-          }}
+          tabIndex={-1}
+          aria-hidden="true"
+          onChange={handleFileChange}
         />
       </div>
 
