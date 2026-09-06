@@ -35,15 +35,13 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // Supabase는 별도 origin이라 runtimeCaching을 추가하지 않는 한 자동으로 캐시되지 않음 —
-        // 앱 셸(JS/CSS/폰트)만 프리캐시하고 육아일기 데이터는 항상 네트워크에서 최신으로 받는다.
         globPatterns: ['**/*.{js,css,html,woff,woff2}'],
       },
     }),
   ],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(import.meta.dirname, './src'),
     },
   },
 })

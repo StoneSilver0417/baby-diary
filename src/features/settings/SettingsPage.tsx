@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useAuth } from '@/features/auth/AuthProvider'
@@ -23,19 +23,17 @@ export function SettingsPage() {
   const myProfile = useMyProfile()
   const { data: isAdmin } = useIsAdmin()
 
-  const [displayName, setDisplayName] = useState('')
+  const [displayName, setDisplayName] = useState(myProfile?.display_name ?? '')
   const [saving, setSaving] = useState(false)
   const [addingChild, setAddingChild] = useState(false)
 
-  useEffect(() => {
-    if (myProfile) setDisplayName(myProfile.display_name)
-  }, [myProfile])
+  const activeDisplayName = displayName || (myProfile?.display_name ?? '')
 
   async function handleSaveProfile() {
     if (!userId) return
     setSaving(true)
     try {
-      await updateDisplayName(userId, displayName)
+      await updateDisplayName(userId, activeDisplayName)
       await queryClient.invalidateQueries({ queryKey: ['profiles'] })
       toast.success('저장했어요.')
     } catch {
@@ -73,7 +71,7 @@ export function SettingsPage() {
 
       <section className="space-y-3">
         <h2 className="text-sm font-medium text-muted-foreground">내 표시 이름</h2>
-        <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
+        <Input value={activeDisplayName} onChange={(e) => setDisplayName(e.target.value)} />
         <Button variant="outline" onClick={handleSaveProfile} disabled={saving}>
           표시 이름 저장
         </Button>
@@ -201,9 +199,6 @@ function AddChildRow({
 function InviteSection() {
   const { data: profiles } = useProfiles()
   const householdId = useHouseholdId()
-  // profiles 테이블 select 정책이 관리자에게는 전체 가족을 열어주므로(관리자 대시보드용),
-  // 여기서는 반드시 내 household로만 걸러서 보여준다 — 아니면 관리자 계정에서
-  // 시스템 전체 구성원이 "우리 가족"으로 보이는 정보 노출 버그가 된다.
   const householdMembers = profiles?.filter((p) => p.household_id === householdId)
   const [invite, setInvite] = useState<Invite | null>(null)
   const [creating, setCreating] = useState(false)

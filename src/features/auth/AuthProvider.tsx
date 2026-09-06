@@ -16,14 +16,16 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 const MOCK_STORAGE_KEY = 'baby-diary-mock-user-id'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [userId, setUserId] = useState<string | null | undefined>(undefined)
+  const [userId, setUserId] = useState<string | null | undefined>(() => {
+    if (useMock) {
+      return localStorage.getItem(MOCK_STORAGE_KEY)
+    }
+    return undefined
+  })
   const queryClient = useQueryClient()
 
   useEffect(() => {
-    if (useMock) {
-      setUserId(localStorage.getItem(MOCK_STORAGE_KEY))
-      return
-    }
+    if (useMock) return
 
     supabase.auth.getSession().then(({ data }) => {
       setUserId(data.session?.user.id ?? null)
