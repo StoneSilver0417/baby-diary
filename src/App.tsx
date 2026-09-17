@@ -40,6 +40,9 @@ const SettingsPage = lazy(() =>
 const AdminPage = lazy(() =>
   import('@/features/admin/AdminPage').then((m) => ({ default: m.AdminPage })),
 )
+const PrivacyPolicyPage = lazy(() =>
+  import('@/features/privacy/PrivacyPolicyPage').then((m) => ({ default: m.PrivacyPolicyPage })),
+)
 
 function App() {
   useBackNavigation()
@@ -55,6 +58,7 @@ function App() {
             </RedirectIfAuthed>
           }
         />
+        <Route path="/privacy" element={<PrivacyPolicyPage />} />
 
         <Route element={<ProtectedRoute />}>
           <Route
