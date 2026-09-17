@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { useIsAdmin } from '@/features/admin/useAdminQueries'
@@ -55,6 +56,14 @@ export function SettingsPage() {
           </AppLink>
         </>
       )}
+
+      <Separator />
+      <Link
+        to="/privacy"
+        className="block text-center text-sm text-muted-foreground underline underline-offset-2 transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      >
+        개인정보 처리방침
+      </Link>
 
       <Separator />
       <Button variant="destructive" className="w-full" onClick={() => signOut()}>
