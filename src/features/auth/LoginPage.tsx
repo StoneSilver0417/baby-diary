@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { Link } from 'react-router'
 import { toast } from 'sonner'
 import { useAuth } from './AuthProvider'
 import { Button } from '@/components/ui/button'
@@ -92,6 +93,16 @@ export function LoginPage() {
         >
           {mode === 'login' ? '계정이 없으신가요? 가입하기' : '이미 계정이 있으신가요? 로그인'}
         </button>
+        <p className="text-center text-xs leading-5 text-muted-foreground">
+          {mode === 'signup' ? '가입하면 ' : ''}
+          <Link
+            to="/privacy"
+            className="underline underline-offset-2 transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          >
+            개인정보 처리방침
+          </Link>
+          {mode === 'signup' ? '에 동의하게 됩니다.' : ''}
+        </p>
       </form>
     </div>
   )
