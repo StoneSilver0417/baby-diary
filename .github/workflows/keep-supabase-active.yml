@@ -1,0 +1,45 @@
+name: Keep Supabase active
+
+on:
+  schedule:
+    - cron: '17 3 * * 1,4'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: keep-supabase-active
+  cancel-in-progress: true
+
+jobs:
+  ping-database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+    steps:
+      - name: Query Postgres through the REST API
+        shell: bash
+        run: |
+          set -euo pipefail
+          : "${SUPABASE_URL:?Add SUPABASE_URL to the repository Actions secrets}"
+          : "${SUPABASE_ANON_KEY:?Add SUPABASE_ANON_KEY to the repository Actions secrets}"
+
+          curl \
+            --fail \
+            --silent \
+            --show-error \
+            --retry 3 \
+            --retry-all-errors \
+            --retry-delay 5 \
+            --connect-timeout 10 \
+            --max-time 30 \
+            --output /dev/null \
+            --get "${SUPABASE_URL%/}/rest/v1/profiles" \
+            --data-urlencode 'select=id' \
+            --data-urlencode 'limit=1' \
+            --header "apikey: ${SUPABASE_ANON_KEY}"
+
+          echo "Supabase database responded successfully."
